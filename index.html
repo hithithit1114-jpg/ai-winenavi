@@ -65,7 +65,7 @@ body {
   padding: 0 24px;
   border-bottom: 1px solid #e8e8e8;
 }
-.hero-left { padding: 40px 0 36px; }
+.hero-left { padding: 24px 0 20px; }
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
@@ -86,11 +86,6 @@ body {
 .hero-stat-num { font-size: 24px; font-weight: 700; color: #111; line-height: 1; }
 .hero-stat-label { font-size: 11px; color: #999; margin-top: 3px; }
 
-.hero-right {
-  display: flex; justify-content: center; align-items: flex-end;
-  height: 360px; overflow: hidden;
-}
-.sommelier-illust { width: 260px; height: 340px; object-fit: cover; object-position: top; }
 
 /* ══ MAIN ════════════════════════════════════════════ */
 .main { max-width: 840px; margin: 0 auto; padding: 40px 24px 100px; }
@@ -406,9 +401,7 @@ input[type=range]::-webkit-slider-thumb {
 @media (max-width: 700px) {
   .header { padding: 0 16px; }
   .main { padding: 20px 16px 80px; }
-  .hero-wrap { grid-template-columns: 1fr; min-height: auto; }
-  .hero-right { display: none; }
-  .hero-left { padding: 28px 0 20px; }
+  .hero-left { padding: 20px 0 16px; }
   .hero-heading { font-size: 28px; }
   .hero-stats { gap: 16px; flex-wrap: wrap; }
   .hero-stat-num { font-size: 20px; }
@@ -586,7 +579,7 @@ var DISH_DICT = [
   // イタリア料理
   { keys: ['パスタ','スパゲッティ','ミートソース','ボロネーゼ'], tags: ['イタリア料理','パスタ','トマト料理'], color: null, body: 'ミディアム', reason: 'トマトソースにはイタリア赤が定番です' },
   { keys: ['カルボナーラ','クリームパスタ','ペペロンチーノ'], tags: ['イタリア料理','パスタ','クリームパスタ'], color: '白', body: 'ミディアム', reason: 'クリームの濃厚さに樽熟白が合います' },
-  { keys: ['ピザ','ピッツァ'], tags: ['イタリア料理','パスタ'], color: null, body: 'ミディアム', reason: 'トマトとチーズにイタリアワインが合います' },
+  { keys: ['ピザ','ピッツァ'], tags: ['イタリア料理','ピザ'], color: null, body: 'ミディアム', reason: 'トマトソースとチーズの組み合わせにイタリアワインが定番です' },
   { keys: ['リゾット'], tags: ['イタリア料理','魚料理'], color: '白', body: 'ミディアム', reason: 'クリーミーなリゾットに辛口白が合います' },
   // フランス料理・チーズ
   { keys: ['チーズ','チーズフォンデュ','チーズ盛り合わせ'], tags: ['チーズ'], color: null, body: 'ミディアム', reason: 'チーズの種類に合わせて赤も白も楽しめます' },
@@ -608,7 +601,7 @@ var DISH_DICT = [
   { keys: ['サラダ','グリーンサラダ','シーザーサラダ','コブサラダ','ニース風サラダ'], tags: ['サラダ','前菜'], color: '白', body: 'ライト', reason: 'さっぱり辛口白やロゼがサラダと合います' },
 
   // ─── ピザ・イタリア各種 ──────────────────────────────────────
-  { keys: ['マルゲリータ','マリナーラ','クワトロフォルマッジ','プロシュート','サラミピザ','ペスカトーレ','ビスマルク','ピザ','ピッツァ','フォカッチャ'], tags: ['イタリア料理','パスタ'], color: null, body: 'ミディアム', reason: 'トマトとチーズにイタリアワインが合います' },
+  { keys: ['マルゲリータ','マリナーラ','クワトロフォルマッジ','プロシュート','サラミピザ','ペスカトーレ','ビスマルク','フォカッチャ'], tags: ['イタリア料理','ピザ'], color: null, body: 'ミディアム', reason: 'トマトソースとチーズの組み合わせにイタリアワインが定番です' },
   { keys: ['ラザニア','ラザーニャ'], tags: ['イタリア料理','肉料理','煮込み'], color: null, body: 'ミディアム', reason: 'ミートソースの層に赤ワインが調和します' },
   { keys: ['ニョッキ'], tags: ['イタリア料理','パスタ'], color: '白', body: 'ライト', reason: 'もちもちの食感に軽やかなイタリア白が合います' },
   { keys: ['オッソブーコ','ミラノ風カツレツ','コトレッタ','ピカタ'], tags: ['イタリア料理','肉料理'], color: null, body: 'ミディアム', reason: 'イタリアンミートにイタリア赤が定番です' },
@@ -1011,6 +1004,11 @@ var SOMMELIER_COMMENTS = {
     'イタリア料理にはイタリアワインが合う、とよく言いますが本当にそうなんです。このワインの酸味がトマトソースと見事に溶け合います。',
     'パスタのソースがどんなものでも、このワインは上手に寄り添ってくれます。食卓がちょっとイタリアンなカフェみたいになりますよ。',
   ],
+  'ピザ': [
+    'ピザの生地のパリッとした食感と、このワインのほどよい酸味が絶妙にマッチします。チーズのコクをワインがさっぱりと流してくれます。',
+    'トマトソースとチーズのピザには、果実味ある赤ワインがぴったりです。気軽なピザタイムがぐっとおしゃれになりますよ。',
+    'ピザの具材にもよりますが、チーズたっぷりのピザには少し渋みのある赤が合います。まるでイタリアの石窯ピザ屋さんに来たような気分になれます。',
+  ],
   '天ぷら': [
     '天ぷらの軽やかな衣と、すっきりした辛口白はとても相性がいいです。油っぽさをさらりと流して、素材の味を引き立ててくれます。',
     '天ぷらって和食ですが、白ワインと合わせると新鮮な発見があります。特に海老や白身魚の天ぷらには、このワインがよく合います。',
@@ -1071,6 +1069,10 @@ var PAIRING_WHY = {
   'パスタ': {
     icon: '🍝🫒',
     why: 'トマトソースのクエン酸・リンゴ酸と、赤ワインや白ワインの酸味が同じ「酸」の仲間として自然に溶け合います。イタリア産ワインはイタリア料理の酸味・ハーブに合うよう長い歴史の中で育まれてきました。'
+  },
+  'ピザ': {
+    icon: '🍕🧀',
+    why: 'ピザのトマトソースに含まれるクエン酸と赤ワインの酸味が調和します。チーズの脂肪分はタンニンによってほぐれ、旨みだけが引き立ちます。生地のパリッとした食感には、適度な酸味と果実味のバランスが大切です。'
   },
   '天ぷら': {
     icon: '🍤💨',
@@ -1622,6 +1624,15 @@ function recordSearch(dish) {
   } catch(e) {}
 }
 
+function recordWineSearch(wineName) {
+  try {
+    var key = _monthKey(new Date()).replace('wbh_counts_', 'wbh_wcounts_');
+    var counts = JSON.parse(localStorage.getItem(key) || '{}');
+    counts[wineName] = (counts[wineName] || 0) + 1;
+    localStorage.setItem(key, JSON.stringify(counts));
+  } catch(e) {}
+}
+
 function _buildRankHtml(counts) {
   var numCls = ['','rank-num-1','rank-num-2','rank-num-3','rank-num-4','rank-num-5'];
   var ranking = Object.keys(counts)
@@ -1642,17 +1653,22 @@ function renderRankingPanel() {
   try {
     var now = new Date();
     var prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    var isWineMode = (typeof currentMode !== 'undefined' && currentMode === 'wine');
 
-    var countsCur  = JSON.parse(localStorage.getItem(_monthKey(now))  || '{}');
-    var countsPrev = JSON.parse(localStorage.getItem(_monthKey(prev)) || '{}');
+    var curKey  = isWineMode ? _monthKey(now).replace('wbh_counts_', 'wbh_wcounts_')  : _monthKey(now);
+    var prevKey = isWineMode ? _monthKey(prev).replace('wbh_counts_', 'wbh_wcounts_') : _monthKey(prev);
+
+    var countsCur  = JSON.parse(localStorage.getItem(curKey)  || '{}');
+    var countsPrev = JSON.parse(localStorage.getItem(prevKey) || '{}');
 
     var panel = document.getElementById('rankingPanel');
     var hasCur  = Object.keys(countsCur).length > 0;
     var hasPrev = Object.keys(countsPrev).length > 0;
     if (!hasCur && !hasPrev) { panel.style.display = 'none'; return; }
 
-    document.getElementById('rankingTitleCurrent').textContent = _monthLabel(now);
-    document.getElementById('rankingTitlePrev').textContent    = _monthLabel(prev);
+    var label = isWineMode ? '人気のワインランキング' : '人気の料理ランキング';
+    document.getElementById('rankingTitleCurrent').textContent = (now.getMonth()+1) + '月の' + label;
+    document.getElementById('rankingTitlePrev').textContent    = (prev.getMonth()+1) + '月の' + label;
     document.getElementById('rankingListCurrent').innerHTML = _buildRankHtml(countsCur);
     document.getElementById('rankingListPrev').innerHTML    = _buildRankHtml(countsPrev);
     panel.style.display = 'grid';
@@ -1826,23 +1842,7 @@ function renderResults(dish, matched, scored, totalCount) {
     });
   }, 80);
 
-  var recipeKey = 'デフォルト';
-  if (matched) {
-    matched.keys.forEach(function(k) { if (RECIPES[k]) recipeKey = k; });
-  }
-  var recipe    = RECIPES[recipeKey] || RECIPES['デフォルト'];
-  var stepsHtml = recipe.steps.map(function(s, idx) {
-    return '<div class="recipe-step"><div class="step-num">' + (idx+1) + '</div><div class="step-text">' + s + '</div></div>';
-  }).join('');
-  var wineLabel = scored[0] ? scored[0].wine['商品名略称'] : '';
-  recipeEl.innerHTML =
-    '<div class="recipe-wrap">' +
-      '<div class="recipe-overline">🍳 Pairing Recipe</div>' +
-      '<div class="recipe-title">' + recipe.title + '</div>' +
-      '<div style="font-size:12px;color:#6b9980;margin-bottom:16px;">— ' + wineLabel + ' に合わせて</div>' +
-      '<div class="recipe-steps">' + stepsHtml + '</div>' +
-    '</div>';
-
+  recipeEl.innerHTML = '';
   resultsEl.classList.add('visible');
   setTimeout(function() {
     window.scrollTo({ top: resultsEl.offsetTop - 80, behavior: 'smooth' });
@@ -1862,6 +1862,7 @@ function switchMode(mode) {
   document.getElementById('resultHeader').innerHTML = '';
   document.getElementById('wineCards').innerHTML = '';
   document.getElementById('recipeSection').innerHTML = '';
+  renderRankingPanel();
 }
 
 // ─── ワイン名オートコンプリート ────────────────────────────────
@@ -2092,7 +2093,9 @@ function suggestByWine() {
   selectedWine = wine;
 
   var dishes = matchDishesByWine(wine);
+  recordWineSearch(wine['商品名略称']);
   renderWineReverseResults(wine, dishes);
+  renderRankingPanel();
 }
 
 function showWineInputError(msg) {
@@ -2158,12 +2161,6 @@ function renderWineReverseResults(wine, dishes) {
   dishes.forEach(function(entry, i) {
     var em      = getDishEmoji(entry.tags);
     var keyName = entry.keys[0];
-    var recipeKey = 'デフォルト';
-    entry.keys.forEach(function(k) { if (RECIPES[k]) recipeKey = k; });
-    var recipe    = RECIPES[recipeKey] || RECIPES['デフォルト'];
-    var stepsHtml = recipe.steps.map(function(s, idx) {
-      return '<div class="recipe-step"><div class="step-num">' + (idx+1) + '</div><div class="step-text">' + s + '</div></div>';
-    }).join('');
 
     html +=
       '<div class="dish-card dish-card-' + (i+1) + '">' +
@@ -2171,15 +2168,8 @@ function renderWineReverseResults(wine, dishes) {
         '<div class="dish-card-body">' +
           '<div class="dish-card-name">' + keyName + '</div>' +
           '<div class="dish-card-reason">🍷 ' + entry.reason + '</div>' +
-          '<div class="wine-tags" style="margin-bottom:12px;">' +
+          '<div class="wine-tags">' +
             entry.tags.map(function(t) { return '<span class="tag tag-other">' + t + '</span>'; }).join('') +
-          '</div>' +
-          '<button class="dish-card-recipe-btn" onclick="toggleRecipe(this)">' +
-            '📖 レシピを見る' +
-          '</button>' +
-          '<div class="dish-recipe-inline">' +
-            '<div style="font-size:10px;font-weight:700;letter-spacing:0.15em;color:var(--gold);margin-bottom:12px;">🍳 ' + recipe.title + '</div>' +
-            '<div class="recipe-steps">' + stepsHtml + '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
