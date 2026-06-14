@@ -61,16 +61,11 @@ body {
 
 /* ══ HERO ════════════════════════════════════════════ */
 .hero-wrap {
-  max-width: 960px; margin: 0 auto;
+  max-width: 720px; margin: 0 auto;
   padding: 0 24px;
-  min-height: 360px;
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  align-items: center;
-  gap: 40px;
   border-bottom: 1px solid #e8e8e8;
 }
-.hero-left { padding: 48px 0; }
+.hero-left { padding: 40px 0 36px; }
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
@@ -461,137 +456,6 @@ input[type=range]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <!-- ソムリエイラスト -->
-  <div class="hero-right">
-    <img id="sommelierImg" class="sommelier-illust" src="sommelier-main.png" alt="大原さん" style="width:260px;height:340px;object-fit:cover;object-position:top center;transition:opacity 0.4s;" />
-    <button id="voiceToggleBtn" onclick="toggleVoice()" style="margin-top:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);border-radius:20px;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:1px;">🔊 音声ON</button>
-    <svg style="display:none" class="sommelier-illust" viewBox="0 0 280 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="bgGlow" cx="50%" cy="80%" r="50%">
-          <stop offset="0%" stop-color="#7b1d3c" stop-opacity="0.35"/>
-          <stop offset="100%" stop-color="#7b1d3c" stop-opacity="0"/>
-        </radialGradient>
-        <linearGradient id="wineGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#9b2335"/>
-          <stop offset="100%" stop-color="#5c0f1e"/>
-        </linearGradient>
-        <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
-          <stop offset="100%" stop-color="rgba(255,255,255,0.05)"/>
-        </linearGradient>
-        <linearGradient id="suitGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#1e1535"/>
-          <stop offset="100%" stop-color="#120d22"/>
-        </linearGradient>
-        <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#f5cba7"/>
-          <stop offset="100%" stop-color="#e8a87c"/>
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      <!-- 背景グロー -->
-      <ellipse cx="140" cy="370" rx="110" ry="50" fill="url(#bgGlow)"/>
-
-      <!-- 影 -->
-      <ellipse cx="140" cy="410" rx="70" ry="12" fill="rgba(0,0,0,0.35)"/>
-
-      <!-- 足（ズボン） -->
-      <rect x="98" y="310" width="34" height="90" rx="10" fill="#1a1230"/>
-      <rect x="148" y="310" width="34" height="90" rx="10" fill="#1a1230"/>
-      <!-- 靴 -->
-      <ellipse cx="115" cy="400" rx="18" ry="9" fill="#0d0a18"/>
-      <ellipse cx="165" cy="400" rx="18" ry="9" fill="#0d0a18"/>
-
-      <!-- 胴体（スーツ） -->
-      <path d="M85,180 Q80,220 82,310 L198,310 Q200,220 195,180 Z" fill="url(#suitGrad)"/>
-      <!-- ジャケットラペル -->
-      <path d="M140,185 L115,200 L110,250 L140,240 Z" fill="#261848"/>
-      <path d="M140,185 L165,200 L170,250 L140,240 Z" fill="#261848"/>
-      <!-- シャツ（中心） -->
-      <path d="M128,185 L140,195 L152,185 L152,240 L128,240 Z" fill="#f0ebe0"/>
-      <!-- ボタン -->
-      <circle cx="140" cy="205" r="2.5" fill="#c9a84c"/>
-      <circle cx="140" cy="218" r="2.5" fill="#c9a84c"/>
-      <circle cx="140" cy="231" r="2.5" fill="#c9a84c"/>
-      <!-- ポケットチーフ -->
-      <path d="M88,210 L96,205 L100,215 L92,220 Z" fill="#c9a84c" opacity="0.85"/>
-      <!-- タストヴァン（ソムリエの試飲皿）— 首からさがっている -->
-      <line x1="140" y1="185" x2="140" y2="175" stroke="#c9a84c" stroke-width="1.5"/>
-      <ellipse cx="140" cy="173" rx="10" ry="6" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
-      <ellipse cx="140" cy="173" rx="7" ry="4" fill="rgba(201,168,76,0.2)"/>
-
-      <!-- 左腕（体に沿って） -->
-      <path d="M85,185 Q70,220 72,280 Q72,290 82,290 Q92,290 92,280 L88,200 Z" fill="url(#suitGrad)"/>
-      <!-- 左手 -->
-      <ellipse cx="80" cy="287" rx="10" ry="12" fill="url(#skinGrad)"/>
-
-      <!-- 右腕（ワイングラスを持ち上げている） -->
-      <path d="M195,185 Q215,175 225,150 Q228,140 220,135 Q212,130 208,140 L200,165 L190,200 Z" fill="url(#suitGrad)"/>
-      <!-- 右手 -->
-      <ellipse cx="218" cy="133" rx="10" ry="11" fill="url(#skinGrad)" transform="rotate(-20,218,133)"/>
-
-      <!-- ワイングラス（右手が持つ） -->
-      <!-- ステム -->
-      <line x1="225" y1="80" x2="222" y2="128" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- ベース -->
-      <ellipse cx="225" cy="80" rx="18" ry="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-      <!-- ボウル外形 -->
-      <path d="M208,30 Q205,55 213,72 L237,72 Q245,55 242,30 Z" fill="url(#glassGrad)" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-      <!-- ワイン液体 -->
-      <path d="M212,48 Q210,60 213,72 L237,72 Q240,60 238,48 Z" fill="url(#wineGrad)" opacity="0.85"/>
-      <!-- グラスの光沢 -->
-      <path d="M211,33 Q209,45 211,58" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <!-- グラスの縁の光 -->
-      <ellipse cx="225" cy="30" rx="17" ry="4" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-
-      <!-- 首 -->
-      <rect x="128" y="155" width="24" height="30" rx="8" fill="url(#skinGrad)"/>
-
-      <!-- 頭 -->
-      <ellipse cx="140" cy="130" rx="42" ry="48" fill="url(#skinGrad)"/>
-      <!-- 耳 -->
-      <ellipse cx="98" cy="132" rx="8" ry="11" fill="#e8a87c"/>
-      <ellipse cx="182" cy="132" rx="8" ry="11" fill="#e8a87c"/>
-
-      <!-- 髪 -->
-      <path d="M100,115 Q105,80 140,78 Q175,80 180,115 Q175,95 140,92 Q105,95 100,115 Z" fill="#2c1810"/>
-      <path d="M98,120 Q96,100 105,88 Q108,84 100,115 Z" fill="#2c1810"/>
-      <path d="M182,120 Q184,100 175,88 Q172,84 180,115 Z" fill="#2c1810"/>
-
-      <!-- 顔 -->
-      <!-- 眉 -->
-      <path d="M118,115 Q126,111 132,114" stroke="#4a3020" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M148,114 Q154,111 162,115" stroke="#4a3020" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <!-- 目 -->
-      <ellipse cx="125" cy="122" rx="7" ry="7.5" fill="white"/>
-      <ellipse cx="155" cy="122" rx="7" ry="7.5" fill="white"/>
-      <circle cx="126" cy="122" r="4.5" fill="#3d2410"/>
-      <circle cx="156" cy="122" r="4.5" fill="#3d2410"/>
-      <circle cx="127.5" cy="120" r="1.5" fill="white"/>
-      <circle cx="157.5" cy="120" r="1.5" fill="white"/>
-      <!-- 上まつげ -->
-      <path d="M118,118 Q125,116 132,118" stroke="#2c1810" stroke-width="1.5" fill="none"/>
-      <path d="M148,118 Q155,116 162,118" stroke="#2c1810" stroke-width="1.5" fill="none"/>
-      <!-- 鼻 -->
-      <path d="M137,130 Q140,135 143,130" stroke="#c4956a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <!-- 口（微笑み） -->
-      <path d="M128,145 Q140,154 152,145" stroke="#b06b4a" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="M130,145 Q140,148 150,145" fill="#c47e5a" opacity="0.4"/>
-
-      <!-- 蝶ネクタイ -->
-      <path d="M128,183 L135,178 L140,183 L135,188 Z" fill="#7b1d3c"/>
-      <path d="M152,183 L145,178 L140,183 L145,188 Z" fill="#7b1d3c"/>
-      <circle cx="140" cy="183" r="3" fill="#a83258"/>
-
-      <!-- グラスのきらめき -->
-      <circle cx="216" cy="35" r="2" fill="white" opacity="0.9" filter="url(#glow)"/>
-      <circle cx="236" cy="42" r="1.5" fill="white" opacity="0.7" filter="url(#glow)"/>
-    </svg>
-  </div>
 </section>
 
 <!-- ══ MAIN ══════════════════════════════════════════ -->
@@ -641,23 +505,8 @@ input[type=range]::-webkit-slider-thumb {
         </button>
       </div>
       <div class="quick-wrap">
-        <div class="quick-label">よく選ばれるお料理</div>
-        <div class="quick-dishes">
-          <span class="quick-dish" onclick="quickDish('ステーキ')">🥩 ステーキ</span>
-          <span class="quick-dish" onclick="quickDish('鮭のムニエル')">🐟 鮭のムニエル</span>
-          <span class="quick-dish" onclick="quickDish('ピザ')">🍕 ピザ</span>
-          <span class="quick-dish" onclick="quickDish('餃子')">🥟 餃子</span>
-          <span class="quick-dish" onclick="quickDish('唐揚げ')">🍗 唐揚げ</span>
-          <span class="quick-dish" onclick="quickDish('天ぷら')">🍤 天ぷら</span>
-          <span class="quick-dish" onclick="quickDish('チーズ')">🧀 チーズ</span>
-          <span class="quick-dish" onclick="quickDish('牡蠣')">🦪 牡蠣</span>
-          <span class="quick-dish" onclick="quickDish('すき焼き')">🍲 すき焼き</span>
-          <span class="quick-dish" onclick="quickDish('パスタ')">🍝 パスタ</span>
-          <span class="quick-dish" onclick="quickDish('刺身')">🐠 刺身・寿司</span>
-          <span class="quick-dish" onclick="quickDish('カレー')">🍛 カレー</span>
-          <span class="quick-dish" onclick="quickDish('焼き鳥')">🍢 焼き鳥</span>
-          <span class="quick-dish" onclick="quickDish('デザート')">🍰 デザート</span>
-        </div>
+        <div class="quick-label" id="quickDishLabel">よく選ばれるお料理</div>
+        <div class="quick-dishes" id="quickDishList"></div>
       </div>
     </div>
 
@@ -1585,7 +1434,7 @@ function suggest() {
   }
 
   recordSearch(dish);
-  renderRankingPanel();
+  renderRankingPanel(); renderQuickDishes();
 
   // 全結果を保持してページング
   _allScored  = result;
@@ -2287,6 +2136,51 @@ function toggleRecipe(btn) {
   btn.textContent = open ? '📖 レシピを閉じる' : '📖 レシピを見る';
 }
 
+// ─── クイック料理ボタン動的生成 ──────────────────────────────────
+var QUICK_DISH_DEFAULTS = [
+  ['🥩','ステーキ'],['🍗','唐揚げ'],['🍝','パスタ'],['🥟','餃子'],
+  ['🍣','刺身・寿司'],['🍕','ピザ'],['🍛','カレー'],['🍢','焼き鳥'],
+  ['🍤','天ぷら'],['🧀','チーズ'],['🦪','牡蠣'],['🍲','すき焼き']
+];
+var DISH_EMOJI_MAP = {
+  'ステーキ':'🥩','唐揚げ':'🍗','パスタ':'🍝','餃子':'🥟','刺身':'🍣','寿司':'🍣',
+  'ピザ':'🍕','カレー':'🍛','焼き鳥':'🍢','天ぷら':'🍤','チーズ':'🧀','牡蠣':'🦪',
+  'すき焼き':'🍲','ハンバーグ':'🍔','鮭':'🐟','サラダ':'🥗','鍋':'🍲',
+  'ラーメン':'🍜','うどん':'🍜','そば':'🍜','肉料理':'🥩','魚料理':'🐟',
+  'チキン':'🍗','ポーク':'🥩','ビーフ':'🥩','シーフード':'🦞','パエリア':'🍚',
+  'リゾット':'🍚','グラタン':'🫕','バーベキュー':'🔥','BBQ':'🔥',
+};
+function getDishEmoji(dish) {
+  for (var k in DISH_EMOJI_MAP) {
+    if (dish.indexOf(k) !== -1) return DISH_EMOJI_MAP[k];
+  }
+  return '🍽️';
+}
+function renderQuickDishes() {
+  var el = document.getElementById('quickDishList');
+  var label = document.getElementById('quickDishLabel');
+  if (!el) return;
+  try {
+    var counts = JSON.parse(localStorage.getItem('wbh_search_counts') || '{}');
+    var ranked = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
+    if (ranked.length >= 4) {
+      // ランキング上位12件を使用
+      var top = ranked.slice(0, 12);
+      if (label) label.textContent = 'よく検索されるお料理';
+      el.innerHTML = top.map(function(d) {
+        return '<span class="quick-dish" onclick="quickDish(\'' + d.replace(/'/g,"&#39;") + '\')">'
+          + getDishEmoji(d) + ' ' + d + '</span>';
+      }).join('');
+      return;
+    }
+  } catch(e) {}
+  // 履歴がまだ少ない場合はデフォルト表示
+  if (label) label.textContent = 'よく選ばれるお料理';
+  el.innerHTML = QUICK_DISH_DEFAULTS.map(function(d) {
+    return '<span class="quick-dish" onclick="quickDish(\'' + d[1] + '\')">' + d[0] + ' ' + d[1] + '</span>';
+  }).join('');
+}
+
 // ─── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('dishInput').addEventListener('keydown', function(e) {
@@ -2306,7 +2200,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (slider) updateSlider(slider);
 
   // ランキングパネル初期表示
-  renderRankingPanel();
+  renderRankingPanel(); renderQuickDishes();
 
   // ワイン入力オートコンプリート
   var wineInput = document.getElementById('wineInput');
