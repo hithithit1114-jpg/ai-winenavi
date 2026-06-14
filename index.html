@@ -1456,15 +1456,18 @@ function suggest() {
     return;
   }
 
-  recordSearch(dish);
+  // 表記ゆれを正式名称に統一（例: 酒飲みムニエル → 鮭のムニエル）
+  var canonicalDish = (matched && matched.keys && matched.keys[0]) ? matched.keys[0] : dish;
+
+  recordSearch(canonicalDish);
   renderRankingPanel();
 
   // 全結果を保持してページング
   _allScored  = result;
   _allMatched = matched;
-  _allDish    = dish;
+  _allDish    = canonicalDish;
   _shownCount = 3;
-  renderResults(dish, matched, result.slice(0, 3), result.length);
+  renderResults(canonicalDish, matched, result.slice(0, 3), result.length);
 }
 
 var _allScored  = [];
