@@ -1,0 +1,2500 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大原葡萄酒場 AIワインナビ</title>
+<script src="wine_data.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+
+:root {
+  --ink:    #09060f;
+  --ink2:   #110d1e;
+  --ink3:   #1c162e;
+  --wine:   #7b1d3c;
+  --wine2:  #a83258;
+  --gold:   #c9a84c;
+  --gold2:  #e8c97a;
+  --cream:  #f5efe6;
+  --muted:  #7a6d8a;
+  --muted2: #b0a4c4;
+  --green:  #22c55e;
+  --green2: #86efac;
+  --surf:   rgba(255,255,255,0.04);
+  --bord:   rgba(255,255,255,0.08);
+  --bord2:  rgba(201,168,76,0.25);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: var(--ink);
+  color: var(--cream);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* subtle noise overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.6;
+}
+* { position: relative; z-index: 1; }
+
+/* ══ HEADER ══════════════════════════════════════════ */
+.header {
+  position: sticky; top: 0; z-index: 300;
+  height: 64px;
+  background: rgba(9,6,15,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--bord);
+  display: flex; align-items: center;
+  padding: 0 32px; gap: 14px;
+}
+.header-logo {
+  font-size: 22px; width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--wine), #c2185b);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(123,29,60,0.6); flex-shrink: 0;
+}
+.header-text { flex: 1; }
+.header-title {
+  font-size: 15px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--cream);
+}
+.header-sub { font-size: 10px; color: var(--muted); margin-top: 1px; letter-spacing: 0.05em; }
+.header-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.12em;
+  padding: 4px 10px; border-radius: 5px;
+  border: 1px solid rgba(201,168,76,0.35);
+  color: var(--gold); background: rgba(201,168,76,0.08);
+}
+
+/* ══ HERO ════════════════════════════════════════════ */
+.hero-wrap {
+  max-width: 1000px; margin: 0 auto;
+  padding: 0 32px;
+  min-height: 440px;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  align-items: center;
+  gap: 40px;
+  border-bottom: 1px solid var(--bord);
+}
+.hero-left { padding: 60px 0; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 20px;
+}
+.hero-eyebrow-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--wine2);
+  box-shadow: 0 0 8px var(--wine2);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.7); }
+}
+.hero-heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 52px; font-weight: 600; line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--cream); margin-bottom: 18px;
+}
+.hero-heading em {
+  font-style: italic; color: var(--gold2);
+}
+.hero-sub {
+  font-size: 14px; color: var(--muted2); line-height: 1.8;
+  max-width: 380px; font-weight: 300;
+}
+.hero-stats {
+  display: flex; gap: 28px; margin-top: 32px;
+}
+.hero-stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px; font-weight: 600; color: var(--cream); line-height: 1;
+}
+.hero-stat-label { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 0.05em; }
+
+/* ── ソムリエイラスト ── */
+.hero-right {
+  display: flex; justify-content: center; align-items: flex-end;
+  height: 440px; overflow: hidden;
+}
+.sommelier-illust { width: 280px; height: 420px; }
+
+/* ══ MAIN ════════════════════════════════════════════ */
+.main { max-width: 900px; margin: 0 auto; padding: 48px 32px 100px; }
+
+/* ══ MODE TABS ═══════════════════════════════════════ */
+.mode-tabs {
+  display: flex; gap: 4px; margin-bottom: 20px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px; padding: 4px;
+  border: 1px solid var(--bord);
+}
+.mode-tab {
+  flex: 1; height: 40px; border-radius: 10px; border: none;
+  background: transparent; color: var(--muted); font-size: 13px;
+  font-weight: 600; font-family: inherit; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: all 0.2s; letter-spacing: 0.02em;
+}
+.mode-tab.active {
+  background: linear-gradient(135deg, var(--wine) 0%, var(--wine2) 100%);
+  color: #fff; box-shadow: 0 4px 16px rgba(123,29,60,0.5);
+}
+.mode-tab:not(.active):hover { background: rgba(255,255,255,0.06); color: var(--cream); }
+
+/* ── ワイン逆引きパネル ── */
+.wine-search-panel { display: none; }
+.wine-search-panel.visible { display: block; }
+.dish-search-panel { display: block; }
+.dish-search-panel.hidden { display: none; }
+
+/* ── ワイン名オートコンプリート ── */
+.wine-input-wrap { position: relative; flex: 1; min-width: 220px; }
+.wine-input {
+  width: 100%; height: 52px; padding: 0 20px;
+  border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05); color: var(--cream);
+  font-size: 15px; font-family: inherit; outline: none; transition: all 0.2s;
+}
+.wine-input::placeholder { color: var(--muted); }
+.wine-input:focus {
+  border-color: var(--gold); background: rgba(201,168,76,0.06);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.wine-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #1a1428; border: 1px solid var(--bord2); border-radius: 12px;
+  max-height: 240px; overflow-y: auto; z-index: 200;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7); display: none;
+}
+.wine-dropdown.open { display: block; }
+.wine-option {
+  padding: 10px 16px; cursor: pointer; font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center; gap: 10px; transition: background 0.1s;
+}
+.wine-option:last-child { border-bottom: none; }
+.wine-option:hover, .wine-option.selected { background: rgba(201,168,76,0.1); color: var(--gold2); }
+.wine-option-name { font-weight: 600; flex: 1; }
+.wine-option-meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* ── 料理提案カード（ワイン逆引き結果） ── */
+.dish-cards { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
+.dish-card {
+  background: var(--ink2); border: 1px solid var(--bord);
+  border-radius: 16px; padding: 22px 24px;
+  display: grid; grid-template-columns: 56px 1fr;
+  gap: 18px; align-items: start;
+  transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.dish-card:hover {
+  border-color: var(--bord2); transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.15);
+}
+.dish-card-1 { border-top: 2px solid var(--gold); }
+.dish-card-2 { border-top: 2px solid rgba(201,168,76,0.4); }
+.dish-card-3 { border-top: 2px solid rgba(201,168,76,0.15); }
+.dish-emoji { font-size: 36px; text-align: center; line-height: 1; margin-top: 4px; }
+.dish-card-body {}
+.dish-card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 600; color: var(--cream); margin-bottom: 8px;
+}
+.dish-card-reason {
+  font-size: 13px; color: var(--muted2); line-height: 1.7; margin-bottom: 12px;
+}
+.dish-card-recipe-btn {
+  height: 34px; padding: 0 16px; border-radius: 8px;
+  border: 1px solid var(--bord2); background: transparent;
+  color: var(--gold); font-size: 12px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
+}
+.dish-card-recipe-btn:hover {
+  background: rgba(201,168,76,0.1); transform: translateY(-1px);
+}
+.dish-recipe-inline {
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--bord);
+  display: none;
+}
+.dish-recipe-inline.open { display: block; animation: rise 0.35s ease; }
+
+/* ── 選択ワイン表示 ── */
+.selected-wine-banner {
+  background: linear-gradient(135deg, rgba(123,29,60,0.25), rgba(168,50,88,0.15));
+  border: 1px solid rgba(123,29,60,0.5); border-radius: 14px;
+  padding: 16px 20px; margin-bottom: 28px;
+  display: flex; align-items: center; gap: 16px;
+}
+.selected-wine-banner-bottle { flex-shrink: 0; }
+.selected-wine-banner-info { flex: 1; }
+.selected-wine-banner-label { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--gold); margin-bottom: 5px; }
+.selected-wine-banner-name { font-size: 18px; font-weight: 700; color: var(--cream); }
+.selected-wine-banner-meta { font-size: 12px; color: var(--muted2); margin-top: 3px; }
+
+/* ══ SEARCH ══════════════════════════════════════════ */
+.search-wrap {
+  background: var(--ink2);
+  border: 1px solid var(--bord2);
+  border-radius: 20px;
+  padding: 28px 28px 22px;
+  margin-bottom: 48px;
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.06), 0 20px 60px rgba(0,0,0,0.5);
+}
+.search-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.search-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--bord2); }
+.search-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.dish-input {
+  flex: 1; min-width: 200px;
+  height: 52px; padding: 0 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: var(--cream); font-size: 15px; font-family: inherit;
+  outline: none; transition: all 0.2s;
+}
+.dish-input::placeholder { color: var(--muted); }
+.dish-input:focus {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.06);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+select {
+  height: 52px; padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: var(--muted2); font-size: 13px; font-family: inherit;
+  outline: none; cursor: pointer; transition: border-color 0.2s;
+  appearance: none; -webkit-appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a6d8a'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+select:focus { border-color: var(--gold); }
+.btn-suggest {
+  height: 52px; padding: 0 28px;
+  border-radius: 12px; border: none;
+  background: linear-gradient(135deg, var(--wine) 0%, var(--wine2) 100%);
+  color: #fff; font-size: 14px; font-weight: 700; font-family: inherit;
+  cursor: pointer; white-space: nowrap; letter-spacing: 0.05em;
+  box-shadow: 0 4px 20px rgba(123,29,60,0.55);
+  transition: all 0.22s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-suggest:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(123,29,60,0.7); }
+.btn-suggest:active { transform: none; }
+
+.quick-wrap { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--bord); }
+.quick-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px;
+}
+.quick-dishes { display: flex; flex-wrap: wrap; gap: 7px; }
+.quick-dish {
+  height: 34px; padding: 0 14px;
+  border-radius: 17px;
+  border: 1px solid var(--bord);
+  background: transparent;
+  color: var(--muted2); font-size: 13px; font-family: inherit;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+  display: flex; align-items: center; gap: 5px;
+}
+.quick-dish:hover {
+  background: rgba(201,168,76,0.1);
+  border-color: rgba(201,168,76,0.35);
+  color: var(--gold2);
+  transform: translateY(-1px);
+}
+
+/* ══ RESULTS ════════════════════════════════════════ */
+.results { display: none; }
+.results.visible { display: block; animation: rise 0.5s cubic-bezier(0.16,1,0.3,1); }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.result-header { margin-bottom: 32px; }
+.result-overline {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.result-overline::after { content: ''; flex: 1; height: 1px; background: var(--bord2); }
+.result-dish-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 34px; font-weight: 600; line-height: 1.15;
+  color: var(--cream); margin-bottom: 6px;
+}
+.result-dish-title em { font-style: italic; color: var(--gold2); }
+.result-count { font-size: 13px; color: var(--muted); }
+
+/* ── ワインカード ── */
+.wine-cards { display: flex; flex-direction: column; gap: 2px; margin-bottom: 40px; }
+
+.wine-card {
+  background: var(--ink2);
+  border: 1px solid var(--bord);
+  border-radius: 16px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 90px 1fr 108px;
+  transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  margin-bottom: 14px;
+}
+.wine-card:hover {
+  border-color: var(--bord2);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.15);
+}
+.wine-card-1 { border-top: 2px solid var(--gold); }
+.wine-card-2 { border-top: 2px solid rgba(201,168,76,0.4); }
+.wine-card-3 { border-top: 2px solid rgba(201,168,76,0.15); }
+.wine-card-4,.wine-card-5,.wine-card-6,.wine-card-7,.wine-card-8,.wine-card-9 { border-top: 2px solid rgba(255,255,255,0.06); }
+.rank-4,.rank-5,.rank-6,.rank-7,.rank-8,.rank-9 { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+
+/* ボトル列 */
+.wine-bottle-col {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 20px 8px; gap: 10px;
+  border-right: 1px solid var(--bord);
+  background: rgba(255,255,255,0.02);
+}
+.bottle-svg { width: 48px; height: 104px; }
+.rank-badge {
+  font-size: 8px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 4px;
+}
+.rank-1 { background: rgba(201,168,76,0.2); color: var(--gold2); border: 1px solid rgba(201,168,76,0.4); }
+.rank-2 { background: rgba(180,180,180,0.1); color: #ccc; border: 1px solid rgba(180,180,180,0.25); }
+.rank-3 { background: rgba(160,100,50,0.1); color: #c49a6c; border: 1px solid rgba(160,100,50,0.25); }
+
+/* 情報列 */
+.wine-info { padding: 22px 24px; }
+.wine-name { font-size: 17px; font-weight: 700; color: var(--cream); margin-bottom: 3px; line-height: 1.35; }
+.wine-official { font-size: 11px; color: var(--muted); margin-bottom: 12px; font-weight: 300; }
+.wine-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.tag { padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
+.tag-red   { background: rgba(185,28,28,0.18); color: #fca5a5; border: 1px solid rgba(185,28,28,0.3); }
+.tag-white { background: rgba(202,138,4,0.15); color: #fde047; border: 1px solid rgba(202,138,4,0.3); }
+.tag-rose  { background: rgba(190,24,93,0.15); color: #f9a8d4; border: 1px solid rgba(190,24,93,0.3); }
+.tag-spark { background: rgba(14,165,233,0.12); color: #7dd3fc; border: 1px solid rgba(14,165,233,0.28); }
+.tag-other { background: rgba(255,255,255,0.05); color: var(--muted2); border: 1px solid var(--bord); }
+
+.sommelier-comment {
+  font-size: 13px; color: var(--muted2); line-height: 1.8; font-weight: 300;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.03);
+  border-left: 2px solid rgba(201,168,76,0.4);
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 10px;
+}
+.sommelier-icon { margin-right: 4px; }
+
+.pairing-why {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.15);
+  font-size: 12px; color: #e8c97a; line-height: 1.75; font-weight: 300;
+}
+.pairing-why-title {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 5px;
+}
+
+/* 価格列 */
+.wine-price-col {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 20px 12px; gap: 4px;
+  border-left: 1px solid var(--bord);
+  background: rgba(255,255,255,0.015);
+}
+.price-label { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.price-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px; font-weight: 600; line-height: 1; color: var(--green2);
+}
+.price-yen { font-size: 16px; }
+.price-vol { font-size: 10px; color: var(--muted); margin-top: 8px; }
+
+/* ══ RECIPE ═════════════════════════════════════════ */
+.recipe-wrap {
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 16px;
+  background: rgba(34,197,94,0.04);
+  padding: 28px 30px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+.recipe-overline {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--green); margin-bottom: 6px;
+}
+.recipe-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-weight: 600; color: var(--green2); margin-bottom: 6px;
+}
+.recipe-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+.recipe-steps { display: flex; flex-direction: column; gap: 12px; }
+.recipe-step { display: flex; gap: 14px; align-items: flex-start; }
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.28);
+  color: var(--green); font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; margin-top: 2px;
+}
+.step-text { font-size: 14px; color: #a7f3d0; line-height: 1.75; font-weight: 300; }
+
+.footer-space { height: 80px; }
+
+/* ── もっと見るボタン ── */
+.load-more-wrap {
+  text-align: center; margin: 8px 0 32px;
+}
+.btn-load-more {
+  height: 48px; padding: 0 36px; border-radius: 24px;
+  border: 1px solid var(--bord2); background: transparent;
+  color: var(--gold); font-size: 14px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-load-more:hover {
+  background: rgba(201,168,76,0.1); transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.btn-load-more:active { transform: none; }
+
+
+/* ══ PRICE SLIDER ════════════════════════════════════ */
+.slider-wrap {
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 160px; padding: 4px 0;
+}
+.slider-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 6px;
+}
+.slider-label-text { font-size: 11px; color: var(--muted2); }
+.slider-val { font-size: 13px; font-weight: 700; color: var(--gold2); }
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; border-radius: 2px;
+  background: linear-gradient(to right, var(--wine) 0%, var(--wine) var(--pct, 60%), rgba(255,255,255,0.1) var(--pct, 60%));
+  outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--gold); box-shadow: 0 2px 8px rgba(201,168,76,0.5);
+  cursor: pointer; transition: transform 0.15s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* ══ SCORE BAR ═══════════════════════════════════════ */
+.score-bar-wrap {
+  margin: 10px 0 4px;
+  display: flex; align-items: center; gap: 10px;
+}
+.score-bar-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); white-space: nowrap;
+}
+.score-bar-track {
+  flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--wine), var(--gold));
+  transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+.score-bar-pct {
+  font-size: 11px; font-weight: 700; color: var(--gold2); min-width: 32px; text-align: right;
+}
+
+/* ══ RANKING PANEL ═══════════════════════════════════ */
+.ranking-panel {
+  display: none;
+  background: var(--ink2); border: 1px solid var(--bord);
+  border-radius: 16px; padding: 20px 22px; margin-bottom: 40px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+}
+.ranking-section-title {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ranking-section-title::after { content: ''; flex: 1; height: 1px; background: var(--bord2); }
+.ranking-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: color 0.15s;
+}
+.ranking-item:last-child { border-bottom: none; }
+.ranking-item:hover .ranking-dish { color: var(--gold2); }
+.ranking-num {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800;
+}
+.rank-num-1 { background: rgba(201,168,76,0.25); color: var(--gold); }
+.rank-num-2 { background: rgba(180,180,180,0.12); color: #ccc; }
+.rank-num-3 { background: rgba(160,100,50,0.12); color: #c49a6c; }
+.rank-num-4, .rank-num-5 { background: rgba(255,255,255,0.05); color: var(--muted); }
+.ranking-dish { flex: 1; font-size: 13px; color: var(--cream); }
+.ranking-count { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.recent-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.recent-chip {
+  height: 30px; padding: 0 12px; border-radius: 15px;
+  border: 1px solid var(--bord); background: transparent;
+  color: var(--muted2); font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.recent-chip:hover {
+  background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.3); color: var(--gold2);
+}
+@media (max-width: 600px) { .ranking-panel { grid-template-columns: 1fr; } }
+
+/* ── レスポンシブ ── */
+@media (max-width: 700px) {
+  .hero-wrap { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  .hero-heading { font-size: 36px; }
+  .wine-card { grid-template-columns: 72px 1fr; }
+  .wine-price-col { display: none; }
+  .main { padding: 32px 16px 80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-logo">🍷</div>
+  <div class="header-text">
+    <div class="header-title">大原葡萄酒場 AIワインナビ</div>
+    <div class="header-sub">247商品のワインデータベース</div>
+  </div>
+  <div class="header-badge">β VERSION</div>
+</header>
+
+<!-- ══ HERO ══════════════════════════════════════════ -->
+<section class="hero-wrap">
+  <div class="hero-left">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      AI WINE NAVIGATOR
+    </div>
+    <h1 class="hero-heading">今夜の食卓に、<br><em>ぴったりの一本</em>を。</h1>
+    <p class="hero-sub">料理名を入力するだけで、最適な一本を厳選してご提案します。なぜ合うのかもわかりやすく解説。</p>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">247</div>
+        <div class="hero-stat-label">取り扱い商品</div>
+      </div>
+      <div style="width:1px;background:var(--bord);margin:4px 0;"></div>
+      <div>
+        <div class="hero-stat-num">38</div>
+        <div class="hero-stat-label">対応料理カテゴリ</div>
+      </div>
+      <div style="width:1px;background:var(--bord);margin:4px 0;"></div>
+      <div>
+        <div class="hero-stat-num">大原葡萄酒場</div>
+        <div class="hero-stat-label"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ソムリエイラスト -->
+  <div class="hero-right">
+    <img id="sommelierImg" class="sommelier-illust" src="sommelier-main.png" alt="AIワインナビ大原さん" style="width:300px;height:420px;object-fit:cover;object-position:top center;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.6);transition:opacity 0.4s;" />
+    <button id="voiceToggleBtn" onclick="toggleVoice()" style="margin-top:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);border-radius:20px;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:1px;">🔊 音声ON</button>
+    <svg style="display:none" class="sommelier-illust" viewBox="0 0 280 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bgGlow" cx="50%" cy="80%" r="50%">
+          <stop offset="0%" stop-color="#7b1d3c" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#7b1d3c" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="wineGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#9b2335"/>
+          <stop offset="100%" stop-color="#5c0f1e"/>
+        </linearGradient>
+        <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0.05)"/>
+        </linearGradient>
+        <linearGradient id="suitGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e1535"/>
+          <stop offset="100%" stop-color="#120d22"/>
+        </linearGradient>
+        <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f5cba7"/>
+          <stop offset="100%" stop-color="#e8a87c"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- 背景グロー -->
+      <ellipse cx="140" cy="370" rx="110" ry="50" fill="url(#bgGlow)"/>
+
+      <!-- 影 -->
+      <ellipse cx="140" cy="410" rx="70" ry="12" fill="rgba(0,0,0,0.35)"/>
+
+      <!-- 足（ズボン） -->
+      <rect x="98" y="310" width="34" height="90" rx="10" fill="#1a1230"/>
+      <rect x="148" y="310" width="34" height="90" rx="10" fill="#1a1230"/>
+      <!-- 靴 -->
+      <ellipse cx="115" cy="400" rx="18" ry="9" fill="#0d0a18"/>
+      <ellipse cx="165" cy="400" rx="18" ry="9" fill="#0d0a18"/>
+
+      <!-- 胴体（スーツ） -->
+      <path d="M85,180 Q80,220 82,310 L198,310 Q200,220 195,180 Z" fill="url(#suitGrad)"/>
+      <!-- ジャケットラペル -->
+      <path d="M140,185 L115,200 L110,250 L140,240 Z" fill="#261848"/>
+      <path d="M140,185 L165,200 L170,250 L140,240 Z" fill="#261848"/>
+      <!-- シャツ（中心） -->
+      <path d="M128,185 L140,195 L152,185 L152,240 L128,240 Z" fill="#f0ebe0"/>
+      <!-- ボタン -->
+      <circle cx="140" cy="205" r="2.5" fill="#c9a84c"/>
+      <circle cx="140" cy="218" r="2.5" fill="#c9a84c"/>
+      <circle cx="140" cy="231" r="2.5" fill="#c9a84c"/>
+      <!-- ポケットチーフ -->
+      <path d="M88,210 L96,205 L100,215 L92,220 Z" fill="#c9a84c" opacity="0.85"/>
+      <!-- タストヴァン（ソムリエの試飲皿）— 首からさがっている -->
+      <line x1="140" y1="185" x2="140" y2="175" stroke="#c9a84c" stroke-width="1.5"/>
+      <ellipse cx="140" cy="173" rx="10" ry="6" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+      <ellipse cx="140" cy="173" rx="7" ry="4" fill="rgba(201,168,76,0.2)"/>
+
+      <!-- 左腕（体に沿って） -->
+      <path d="M85,185 Q70,220 72,280 Q72,290 82,290 Q92,290 92,280 L88,200 Z" fill="url(#suitGrad)"/>
+      <!-- 左手 -->
+      <ellipse cx="80" cy="287" rx="10" ry="12" fill="url(#skinGrad)"/>
+
+      <!-- 右腕（ワイングラスを持ち上げている） -->
+      <path d="M195,185 Q215,175 225,150 Q228,140 220,135 Q212,130 208,140 L200,165 L190,200 Z" fill="url(#suitGrad)"/>
+      <!-- 右手 -->
+      <ellipse cx="218" cy="133" rx="10" ry="11" fill="url(#skinGrad)" transform="rotate(-20,218,133)"/>
+
+      <!-- ワイングラス（右手が持つ） -->
+      <!-- ステム -->
+      <line x1="225" y1="80" x2="222" y2="128" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- ベース -->
+      <ellipse cx="225" cy="80" rx="18" ry="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+      <!-- ボウル外形 -->
+      <path d="M208,30 Q205,55 213,72 L237,72 Q245,55 242,30 Z" fill="url(#glassGrad)" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
+      <!-- ワイン液体 -->
+      <path d="M212,48 Q210,60 213,72 L237,72 Q240,60 238,48 Z" fill="url(#wineGrad)" opacity="0.85"/>
+      <!-- グラスの光沢 -->
+      <path d="M211,33 Q209,45 211,58" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- グラスの縁の光 -->
+      <ellipse cx="225" cy="30" rx="17" ry="4" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+
+      <!-- 首 -->
+      <rect x="128" y="155" width="24" height="30" rx="8" fill="url(#skinGrad)"/>
+
+      <!-- 頭 -->
+      <ellipse cx="140" cy="130" rx="42" ry="48" fill="url(#skinGrad)"/>
+      <!-- 耳 -->
+      <ellipse cx="98" cy="132" rx="8" ry="11" fill="#e8a87c"/>
+      <ellipse cx="182" cy="132" rx="8" ry="11" fill="#e8a87c"/>
+
+      <!-- 髪 -->
+      <path d="M100,115 Q105,80 140,78 Q175,80 180,115 Q175,95 140,92 Q105,95 100,115 Z" fill="#2c1810"/>
+      <path d="M98,120 Q96,100 105,88 Q108,84 100,115 Z" fill="#2c1810"/>
+      <path d="M182,120 Q184,100 175,88 Q172,84 180,115 Z" fill="#2c1810"/>
+
+      <!-- 顔 -->
+      <!-- 眉 -->
+      <path d="M118,115 Q126,111 132,114" stroke="#4a3020" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M148,114 Q154,111 162,115" stroke="#4a3020" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- 目 -->
+      <ellipse cx="125" cy="122" rx="7" ry="7.5" fill="white"/>
+      <ellipse cx="155" cy="122" rx="7" ry="7.5" fill="white"/>
+      <circle cx="126" cy="122" r="4.5" fill="#3d2410"/>
+      <circle cx="156" cy="122" r="4.5" fill="#3d2410"/>
+      <circle cx="127.5" cy="120" r="1.5" fill="white"/>
+      <circle cx="157.5" cy="120" r="1.5" fill="white"/>
+      <!-- 上まつげ -->
+      <path d="M118,118 Q125,116 132,118" stroke="#2c1810" stroke-width="1.5" fill="none"/>
+      <path d="M148,118 Q155,116 162,118" stroke="#2c1810" stroke-width="1.5" fill="none"/>
+      <!-- 鼻 -->
+      <path d="M137,130 Q140,135 143,130" stroke="#c4956a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- 口（微笑み） -->
+      <path d="M128,145 Q140,154 152,145" stroke="#b06b4a" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M130,145 Q140,148 150,145" fill="#c47e5a" opacity="0.4"/>
+
+      <!-- 蝶ネクタイ -->
+      <path d="M128,183 L135,178 L140,183 L135,188 Z" fill="#7b1d3c"/>
+      <path d="M152,183 L145,178 L140,183 L145,188 Z" fill="#7b1d3c"/>
+      <circle cx="140" cy="183" r="3" fill="#a83258"/>
+
+      <!-- グラスのきらめき -->
+      <circle cx="216" cy="35" r="2" fill="white" opacity="0.9" filter="url(#glow)"/>
+      <circle cx="236" cy="42" r="1.5" fill="white" opacity="0.7" filter="url(#glow)"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ══ MAIN ══════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- 検索 -->
+  <div class="search-wrap">
+
+    <!-- モード切替タブ -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tabDish" onclick="switchMode('dish')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        料理 → ワインを探す
+      </button>
+      <button class="mode-tab" id="tabWine" onclick="switchMode('wine')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 22h8M12 11v11M6 3l1.5 8c0 2.5 2 4 4.5 4s4.5-1.5 4.5-4L18 3H6z"/></svg>
+        ワイン → 料理を探す
+      </button>
+    </div>
+
+    <!-- 料理入力パネル -->
+    <div class="dish-search-panel" id="dishSearchPanel">
+
+      <div class="search-eyebrow">今夜のお料理を教えてください</div>
+      <div class="search-row">
+        <input class="dish-input" id="dishInput" type="text" placeholder="例：牛肉のステーキ、鮭のムニエル、餃子…" />
+        <div class="filters">
+          <!-- 予算スライダー -->
+          <div class="slider-wrap">
+            <div class="slider-header">
+              <span class="slider-label-text">予算 上限</span>
+              <span class="slider-val">〜<span id="sliderVal">3,000</span>円</span>
+            </div>
+            <input type="range" id="priceSlider" min="500" max="6000" step="100" value="3000" oninput="updateSlider(this)" />
+          </div>
+          <select id="colorFilter">
+            <option value="all">色：すべて</option>
+            <option value="赤">赤ワイン</option>
+            <option value="白">白ワイン</option>
+            <option value="ロゼ">ロゼ</option>
+            <option value="スパークリング">スパークリング</option>
+          </select>
+        </div>
+        <button class="btn-suggest" onclick="suggest()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          ワインを提案
+        </button>
+      </div>
+      <div class="quick-wrap">
+        <div class="quick-label">よく選ばれるお料理</div>
+        <div class="quick-dishes">
+          <span class="quick-dish" onclick="quickDish('ステーキ')">🥩 ステーキ</span>
+          <span class="quick-dish" onclick="quickDish('鮭のムニエル')">🐟 鮭のムニエル</span>
+          <span class="quick-dish" onclick="quickDish('ピザ')">🍕 ピザ</span>
+          <span class="quick-dish" onclick="quickDish('餃子')">🥟 餃子</span>
+          <span class="quick-dish" onclick="quickDish('唐揚げ')">🍗 唐揚げ</span>
+          <span class="quick-dish" onclick="quickDish('天ぷら')">🍤 天ぷら</span>
+          <span class="quick-dish" onclick="quickDish('チーズ')">🧀 チーズ</span>
+          <span class="quick-dish" onclick="quickDish('牡蠣')">🦪 牡蠣</span>
+          <span class="quick-dish" onclick="quickDish('すき焼き')">🍲 すき焼き</span>
+          <span class="quick-dish" onclick="quickDish('パスタ')">🍝 パスタ</span>
+          <span class="quick-dish" onclick="quickDish('刺身')">🐠 刺身・寿司</span>
+          <span class="quick-dish" onclick="quickDish('カレー')">🍛 カレー</span>
+          <span class="quick-dish" onclick="quickDish('焼き鳥')">🍢 焼き鳥</span>
+          <span class="quick-dish" onclick="quickDish('デザート')">🍰 デザート</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ワイン入力パネル -->
+    <div class="wine-search-panel" id="wineSearchPanel">
+      <div class="search-eyebrow">ワイン名を入力してください</div>
+      <div class="search-row">
+        <div class="wine-input-wrap">
+          <input class="wine-input" id="wineInput" type="text" placeholder="例：サンタ・ヘレナ、シャブリ、モンテス…" autocomplete="off" />
+          <div class="wine-dropdown" id="wineDropdown"></div>
+        </div>
+        <button class="btn-suggest" onclick="suggestByWine()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 22h8M12 11v11M6 3l1.5 8c0 2.5 2 4 4.5 4s4.5-1.5 4.5-4L18 3H6z"/></svg>
+          料理を提案
+        </button>
+      </div>
+      <div class="quick-wrap">
+        <div class="quick-label">ワインを選んで試す</div>
+        <div class="quick-dishes" id="wineQuickList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 検索ランキング・履歴パネル -->
+  <div class="ranking-panel" id="rankingPanel" style="display:none;">
+    <div>
+      <div class="ranking-section-title">🏆 人気の料理ランキング</div>
+      <div id="rankingList"></div>
+    </div>
+    <div>
+      <div class="ranking-section-title">🕐 最近の検索</div>
+      <div class="recent-chips" id="recentList"></div>
+    </div>
+  </div>
+
+  <!-- 結果 -->
+  <div class="results" id="results">
+    <div id="resultHeader"></div>
+    <div class="wine-cards" id="wineCards"></div>
+    <div id="recipeSection"></div>
+  </div>
+  <div class="footer-space"></div>
+</main>
+
+<script>
+// ─── 料理→ペアリングキーワード辞書 ───────────────────────────
+var DISH_DICT = [
+  // 牛肉・赤身肉
+  { keys: ['ステーキ','牛ステーキ','ビーフステーキ','ビステッカ'], tags: ['肉料理','ステーキ','グリル'], color: null, body: 'フルボディ', reason: 'タンニンが肉の旨みと調和します' },
+  { keys: ['ハンバーグ','煮込みハンバーグ'], tags: ['肉料理','ハンバーグ','煮込み'], color: null, body: 'ミディアム', reason: 'コクのある赤がトマトソースと好相性です' },
+  { keys: ['すき焼き'], tags: ['和食','肉料理','煮込み'], color: null, body: 'ミディアム', reason: '甘辛いタレに果実味豊かな赤が合います' },
+  { keys: ['しゃぶしゃぶ'], tags: ['和食','肉料理'], color: null, body: 'ライト', reason: '繊細な味に軽やかな赤か白がよく合います' },
+  { keys: ['焼肉','バーベキュー','BBQ','炭火焼き'], tags: ['肉料理','バーベキュー','グリル'], color: null, body: 'フルボディ', reason: '煙の香りにスパイシーなワインが合います' },
+  { keys: ['ラム','ラムチョップ','羊肉'], tags: ['肉料理','ステーキ'], color: null, body: 'フルボディ', reason: '個性的な旨みにタンニン豊かな赤が合います' },
+  { keys: ['ビーフシチュー','煮込み','ポトフ','シチュー'], tags: ['肉料理','煮込み'], color: null, body: 'ミディアム', reason: 'コク深い煮込みに赤の渋みがマッチします' },
+  { keys: ['ローストビーフ'], tags: ['肉料理','グリル'], color: null, body: 'フルボディ', reason: 'しっかりした赤身にフルボディが映えます' },
+  // 豚肉・鶏肉
+  { keys: ['唐揚げ','からあげ','鶏の唐揚げ'], tags: ['肉料理','揚げ物'], color: null, body: 'ミディアム', reason: '揚げ物の油分をさっぱり流してくれます' },
+  { keys: ['鶏肉','チキン','鶏のソテー','鶏のグリル','ローストチキン'], tags: ['鶏料理','肉料理'], color: null, body: 'ミディアム', reason: '白でも赤でも合う万能な素材です' },
+  { keys: ['とんかつ','豚カツ','カツ'], tags: ['肉料理','揚げ物'], color: null, body: 'ミディアム', reason: '衣のサクサクにスッキリした赤が合います' },
+  { keys: ['焼き鳥','やきとり','串焼き'], tags: ['肉料理','焼き鳥'], color: null, body: 'ライト', reason: '軽めの赤やロゼが炭の香りに合います' },
+  { keys: ['豚の角煮','角煮','豚肉の煮込み'], tags: ['肉料理','煮込み'], color: null, body: 'ミディアム', reason: 'タレの甘みにコクある赤が合います' },
+  // 魚介・シーフード
+  { keys: ['刺身','お刺身','刺し身','マグロ','サーモン'], tags: ['魚料理','和食'], color: '白', body: 'ライト', reason: '辛口の白が生魚の繊細な旨みを引き立てます' },
+  { keys: ['寿司','お寿司','すし'], tags: ['魚料理','和食','寿司'], color: '白', body: 'ライト', reason: '辛口の白や泡が酢飯と魚介に合います' },
+  { keys: ['牡蠣','カキ','オイスター'], tags: ['魚料理','牡蠣','シーフード'], color: '白', body: 'ライト', reason: 'ミネラル感のある辛口白がベストマッチです' },
+  { keys: ['鮭','サーモン','鮭のムニエル','鮭のホイル焼き'], tags: ['魚料理'], color: null, body: 'ミディアム', reason: 'ピノノワールか辛口白が脂分と合います' },
+  { keys: ['白身魚','鯛','タイ','ひらめ','ヒラメ','スズキ'], tags: ['魚料理','シーフード'], color: '白', body: 'ライト', reason: '繊細な白身に辛口白が上品に合います' },
+  { keys: ['エビ','海老','シュリンプ','えび'], tags: ['魚料理','シーフード'], color: '白', body: 'ライト', reason: 'シュッとした辛口白が旨みを引き出します' },
+  { keys: ['貝','アサリ','ホタテ','ホタテ貝','帆立'], tags: ['魚料理','シーフード'], color: '白', body: 'ライト', reason: '磯の旨みに辛口白がよく合います' },
+  { keys: ['シーフード','魚介','海鮮'], tags: ['魚料理','シーフード'], color: '白', body: 'ライト', reason: '幅広い魚介に辛口白がマッチします' },
+  { keys: ['天ぷら','てんぷら'], tags: ['和食','魚料理','天ぷら'], color: '白', body: 'ライト', reason: 'さっぱり辛口白が衣の軽さを活かします' },
+  // イタリア料理
+  { keys: ['パスタ','スパゲッティ','ミートソース','ボロネーゼ'], tags: ['イタリア料理','パスタ','トマト料理'], color: null, body: 'ミディアム', reason: 'トマトソースにはイタリア赤が定番です' },
+  { keys: ['カルボナーラ','クリームパスタ','ペペロンチーノ'], tags: ['イタリア料理','パスタ','クリームパスタ'], color: '白', body: 'ミディアム', reason: 'クリームの濃厚さに樽熟白が合います' },
+  { keys: ['ピザ','ピッツァ'], tags: ['イタリア料理','パスタ'], color: null, body: 'ミディアム', reason: 'トマトとチーズにイタリアワインが合います' },
+  { keys: ['リゾット'], tags: ['イタリア料理','魚料理'], color: '白', body: 'ミディアム', reason: 'クリーミーなリゾットに辛口白が合います' },
+  // フランス料理・チーズ
+  { keys: ['チーズ','チーズフォンデュ','チーズ盛り合わせ'], tags: ['チーズ'], color: null, body: 'ミディアム', reason: 'チーズの種類に合わせて赤も白も楽しめます' },
+  { keys: ['フォアグラ'], tags: ['フランス料理','肉料理'], color: '白', body: 'ミディアム', reason: '甘口白か重厚な赤がフォアグラに合います' },
+  // 和食
+  { keys: ['煮物','筑前煮','肉じゃが'], tags: ['和食','煮込み'], color: null, body: 'ライト', reason: '和食の出汁に軽やかなワインが合います' },
+  { keys: ['そば','蕎麦','うどん'], tags: ['和食'], color: '白', body: 'ライト', reason: '辛口の白が出汁の風味と合います' },
+  { keys: ['天丼','うな丼','鰻'], tags: ['和食','肉料理'], color: null, body: 'ミディアム', reason: 'タレの甘みにコクある赤か白が合います' },
+  // エスニック・アジア
+  { keys: ['餃子','ギョーザ','ぎょうざ'], tags: ['肉料理','エスニック'], color: null, body: 'ライト', reason: '酸味や旨みのある軽めの赤が合います' },
+  { keys: ['麻婆豆腐','マーボー豆腐','中華'], tags: ['エスニック','スパイシー'], color: null, body: 'ミディアム', reason: 'スパイシーな辛さにフルーティーな赤が合います' },
+  { keys: ['カレー','インドカレー','タイカレー'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'スパイスにやや甘口かフルーティーな白が合います' },
+  { keys: ['エスニック','タイ料理','ベトナム料理','インド料理'], tags: ['アジア料理','エスニック'], color: '白', body: 'ライト', reason: '香り豊かな白かロゼがエスニックに合います' },
+  { keys: ['パエリア','スペイン料理'], tags: ['スペイン料理','魚料理'], color: null, body: 'ミディアム', reason: 'スペインワインがシーフードパエリアに合います' },
+  // デザート・軽食
+  { keys: ['デザート','ケーキ','チョコレート','スイーツ'], tags: ['デザート','フルーツ'], color: null, body: 'ライト', reason: '甘口スパークリングやロゼが甘みに合います' },
+  { keys: ['フルーツ','果物'], tags: ['デザート','フルーツ'], color: null, body: 'ライト', reason: '甘口ワインやスパークリングがフルーツに合います' },
+  { keys: ['前菜','アペリティフ','オードブル'], tags: ['前菜','アペリティフ'], color: null, body: 'ライト', reason: '軽やかな泡や白が食欲を引き立てます' },
+  { keys: ['サラダ','グリーンサラダ','シーザーサラダ','コブサラダ','ニース風サラダ'], tags: ['サラダ','前菜'], color: '白', body: 'ライト', reason: 'さっぱり辛口白やロゼがサラダと合います' },
+
+  // ─── ピザ・イタリア各種 ──────────────────────────────────────
+  { keys: ['マルゲリータ','マリナーラ','クワトロフォルマッジ','プロシュート','サラミピザ','ペスカトーレ','ビスマルク','ピザ','ピッツァ','フォカッチャ'], tags: ['イタリア料理','パスタ'], color: null, body: 'ミディアム', reason: 'トマトとチーズにイタリアワインが合います' },
+  { keys: ['ラザニア','ラザーニャ'], tags: ['イタリア料理','肉料理','煮込み'], color: null, body: 'ミディアム', reason: 'ミートソースの層に赤ワインが調和します' },
+  { keys: ['ニョッキ'], tags: ['イタリア料理','パスタ'], color: '白', body: 'ライト', reason: 'もちもちの食感に軽やかなイタリア白が合います' },
+  { keys: ['オッソブーコ','ミラノ風カツレツ','コトレッタ','ピカタ'], tags: ['イタリア料理','肉料理'], color: null, body: 'ミディアム', reason: 'イタリアンミートにイタリア赤が定番です' },
+  { keys: ['ブルスケッタ','カプレーゼ','アンティパスト','プロシュートメロン'], tags: ['イタリア料理','前菜'], color: '白', body: 'ライト', reason: '前菜の軽い風味にすっきり白が合います' },
+  { keys: ['アクアパッツァ','ペスカトーレ'], tags: ['イタリア料理','魚料理'], color: '白', body: 'ミディアム', reason: '魚介のうまみにイタリア白が映えます' },
+
+  // ─── フランス料理 ────────────────────────────────────────────
+  { keys: ['ラタトゥイユ','ラタトゥーユ'], tags: ['フランス料理','野菜料理'], color: null, body: 'ライト', reason: '野菜の甘みにプロヴァンス系ロゼがよく合います' },
+  { keys: ['キッシュ','タルト'], tags: ['フランス料理','前菜'], color: '白', body: 'ミディアム', reason: '卵とクリームの風味に辛口白が合います' },
+  { keys: ['テリーヌ','パテ','リエット'], tags: ['フランス料理','肉料理','前菜'], color: null, body: 'ミディアム', reason: '肉の旨みに果実味のある赤か白が合います' },
+  { keys: ['コックオーヴァン','鶏のワイン煮','ブフブルギニョン','牛肉の赤ワイン煮'], tags: ['フランス料理','肉料理','煮込み'], color: '赤', body: 'フルボディ', reason: 'ワイン煮込みには同系統の赤を合わせるのが鉄則です' },
+  { keys: ['ヴィシソワーズ','スープ','ポタージュ','オニオングラタンスープ'], tags: ['フランス料理','前菜'], color: '白', body: 'ライト', reason: 'スープの優しい風味に辛口白がよく合います' },
+  { keys: ['クレープ','ガレット'], tags: ['フランス料理','デザート'], color: null, body: 'ライト', reason: '甘いクレープにスパークリングや甘口白が合います' },
+  { keys: ['エスカルゴ'], tags: ['フランス料理','前菜'], color: '白', body: 'ミディアム', reason: 'ガーリックバターに辛口白が合います' },
+
+  // ─── スペイン料理 ────────────────────────────────────────────
+  { keys: ['パエリア','パエリャ','シーフードパエリア','パエリヤ'], tags: ['スペイン料理','魚料理'], color: null, body: 'ミディアム', reason: 'スペインワインがシーフードパエリアに合います' },
+  { keys: ['ガスパチョ'], tags: ['スペイン料理','前菜'], color: '白', body: 'ライト', reason: '冷製トマトスープに辛口白がすっきり合います' },
+  { keys: ['タパス','ピンチョス','チョリソ'], tags: ['スペイン料理','前菜'], color: null, body: 'ライト', reason: 'スペイン小皿料理にスペインワインが鉄板です' },
+  { keys: ['アヒージョ'], tags: ['スペイン料理','魚料理','前菜'], color: '白', body: 'ミディアム', reason: 'オイルとにんにくの香りに辛口白が合います' },
+  { keys: ['クロケット','コロッケ'], tags: ['スペイン料理','前菜'], color: null, body: 'ライト', reason: '揚げ物の油っぽさをすっきり白やロゼが流します' },
+
+  // ─── アメリカ・洋食 ──────────────────────────────────────────
+  { keys: ['ハンバーガー','バーガー','チーズバーガー'], tags: ['肉料理','アメリカ料理'], color: '赤', body: 'ミディアム', reason: 'ジューシーバーガーに飲みやすい赤が合います' },
+  { keys: ['ホットドッグ'], tags: ['肉料理','アメリカ料理'], color: null, body: 'ライト', reason: 'ソーセージにロゼやスパークリングが合います' },
+  { keys: ['グラタン','ドリア','マカロニグラタン'], tags: ['洋食','クリームパスタ'], color: '白', body: 'ミディアム', reason: 'クリームソースの濃厚さに樽熟白が合います' },
+  { keys: ['オムライス','オムレツ'], tags: ['洋食','卵料理'], color: null, body: 'ライト', reason: '卵のまろやかさに辛口白やロゼが合います' },
+  { keys: ['ミネストローネ','クラムチャウダー','スープ'], tags: ['洋食','野菜料理'], color: '白', body: 'ライト', reason: 'スープの優しいうまみに軽めの白が合います' },
+  { keys: ['ロールキャベツ'], tags: ['洋食','肉料理','煮込み'], color: null, body: 'ミディアム', reason: 'トマト煮込みに軽めの赤が合います' },
+  { keys: ['サーモンステーキ','魚のグリル','グリルフィッシュ'], tags: ['魚料理'], color: null, body: 'ミディアム', reason: 'グリル魚にピノノワールか辛口白が合います' },
+  { keys: ['ナチョス','タコス','ブリトー','ファジータ','メキシカン'], tags: ['エスニック','アメリカ料理'], color: null, body: 'ライト', reason: 'スパイシーなメキシカンにロゼやフルーティー赤が合います' },
+
+  // ─── 中華料理 ────────────────────────────────────────────────
+  { keys: ['北京ダック','ペキンダック'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: '皮のパリパリ感に軽い赤やロゼが合います' },
+  { keys: ['チャーシュー','叉焼','角煮'], tags: ['肉料理','煮込み'], color: null, body: 'ミディアム', reason: '甘辛タレのコクにミディアム赤が合います' },
+  { keys: ['チャーハン','炒飯'], tags: ['エスニック'], color: null, body: 'ライト', reason: '香ばしい炒飯にフルーティーな赤やロゼが合います' },
+  { keys: ['春巻き','シュウマイ','焼売','小籠包','点心','餃子'], tags: ['肉料理','エスニック'], color: null, body: 'ライト', reason: '点心の旨みに軽やかな赤や辛口白が合います' },
+  { keys: ['回鍋肉','ホイコーロー','青椒肉絲','チンジャオロース'], tags: ['エスニック','肉料理','スパイシー'], color: null, body: 'ミディアム', reason: '中華炒め物のコクにフルーティー赤が合います' },
+  { keys: ['ニラレバ','レバニラ','レバー炒め','ニラ炒め','レバー'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'レバーの濃厚な旨みにフルーティーな軽い赤が合います' },
+  { keys: ['八宝菜','ハッポウサイ','あんかけ炒め'], tags: ['エスニック','野菜料理'], color: '白', body: 'ライト', reason: '野菜と海鮮のあんかけに辛口白が合います' },
+  { keys: ['酢豚','スブタ','甘酢'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: '甘酢のコクにフルーティーなロゼや赤が合います' },
+  { keys: ['マーボーナス','麻婆茄子','ナス炒め'], tags: ['エスニック','野菜料理','スパイシー'], color: null, body: 'ライト', reason: '茄子と豆板醤の旨みに軽い赤が合います' },
+  { keys: ['エビマヨ','海老マヨ','えびマヨ'], tags: ['魚料理','エスニック'], color: '白', body: 'ライト', reason: 'クリーミーなマヨネーズソースに辛口白が合います' },
+  { keys: ['エビチリ','海老チリ'], tags: ['魚料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'チリの辛みにやや甘口の白やロゼが和らげます' },
+  { keys: ['中華丼','チャプチェ','八宝飯'], tags: ['エスニック','野菜料理'], color: null, body: 'ライト', reason: '具沢山の中華丼にフルーティーなワインが合います' },
+  { keys: ['天津飯','カニ玉','ふわふわ卵'], tags: ['エスニック','卵料理'], color: null, body: 'ライト', reason: '卵あんかけに軽い白やロゼが合います' },
+  { keys: ['黒酢料理','黒酢酢豚','黒酢チキン'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: '黒酢の深みある酸味に軽い赤が合います' },
+  { keys: ['油淋鶏','ユーリンチー','油淋鶏丼'], tags: ['エスニック','鶏料理'], color: null, body: 'ライト', reason: '揚げ鶏と香味ソースに軽いロゼが合います' },
+  { keys: ['蟹玉','かに玉','カニ玉'], tags: ['エスニック','卵料理','魚料理'], color: '白', body: 'ライト', reason: '卵とカニの旨みに辛口白が合います' },
+  { keys: ['棒棒鶏','バンバンジー','よだれ鶏'], tags: ['エスニック','鶏料理'], color: '白', body: 'ライト', reason: '胡麻ダレの風味に辛口白か軽い赤が合います' },
+  { keys: ['担々麺','タンタン麺'], tags: ['エスニック','スパイシー'], color: null, body: 'ライト', reason: 'ゴマとスパイスにフルーティーな白やロゼが合います' },
+
+  // ─── アジア料理 ──────────────────────────────────────────────
+  { keys: ['フォー','ベトナム料理','春巻き'], tags: ['アジア料理','エスニック'], color: '白', body: 'ライト', reason: 'ハーブと魚醤の風味に香り豊かな白が合います' },
+  { keys: ['カオマンガイ','カオマンガイ','海南鶏飯','ハイナンチキンライス'], tags: ['アジア料理','エスニック','鶏料理'], color: '白', body: 'ライト', reason: '蒸し鶏の旨みとジャスミンライスに爽やかな白がよく合います' },
+  { keys: ['パッタイ','タイ焼きそば'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'ナンプラーと甘みのバランスにフルーティーな白やロゼが合います' },
+  { keys: ['グリーンカレー','ゲーンキャオワーン','タイグリーンカレー'], tags: ['アジア料理','エスニック','スパイシー'], color: '白', body: 'ライト', reason: 'ハーブとレモングラスの香りにやや甘口の白が合います' },
+  { keys: ['レッドカレー','ゲーンペット','タイレッドカレー'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: '濃厚なスパイスにフルーティーな赤や甘口白が和らげます' },
+  { keys: ['ガパオ','ガパオライス','バジル炒め','タイバジル炒め'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'バジルと唐辛子の香りにロゼや軽い赤がマッチします' },
+  { keys: ['トムヤムクン','トムヤム','タイスープ'], tags: ['アジア料理','エスニック','スパイシー'], color: '白', body: 'ライト', reason: '酸味と辛みのスープに辛口白やスパークリングが爽やかに合います' },
+  { keys: ['カオパット','タイチャーハン','タイ炒飯'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'ナンプラー香るチャーハンに軽い白やロゼが合います' },
+  { keys: ['ソムタム','パパイヤサラダ','タイサラダ'], tags: ['アジア料理','エスニック','スパイシー'], color: '白', body: 'ライト', reason: '酸っぱ辛いサラダに辛口白やスパークリングが爽快です' },
+  { keys: ['タイ料理','タイ式','タイ風'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'スパイスと香草に甘口白やフルーティー赤が合います' },
+  { keys: ['マッサマンカレー','マッサマン'], tags: ['アジア料理','エスニック','スパイシー'], color: 'ロゼ', body: 'ライト', reason: 'ナッツとスパイスのまろやかカレーにロゼが絶妙です' },
+  { keys: ['カオニャオマムアン','マンゴーもち米','タイスイーツ'], tags: ['アジア料理','デザート'], color: null, body: 'ライト', reason: 'ココナッツミルクとマンゴーの甘みに甘口白が合います' },
+  { keys: ['プーパッポンカリー','カニカレー','タイカニ料理'], tags: ['アジア料理','エスニック','魚料理'], color: '白', body: 'ライト', reason: 'カニの旨みとカレー風味に辛口白やスパークリングが合います' },
+  { keys: ['ビビンバ','プルコギ','チヂミ','サムギョプサル','韓国料理'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: '韓国料理のうまみにフルーティーな赤やロゼが合います' },
+  { keys: ['チュクミ','주꾸미','チュクミ炒め','ジュクミ','テナガダコ','手長蛸','コプチャン','ハラミ','ソプチャン'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: '辛味噌の濃い旨みにフルーティーなロゼや軽い赤が合います' },
+  { keys: ['ナクチポックム','タコ炒め','辛いタコ','辛口タコ'], tags: ['アジア料理','魚料理','スパイシー'], color: null, body: 'ライト', reason: '辛いタコ炒めにフルーティーなロゼが辛さを和らげます' },
+  { keys: ['キムチチゲ','スンドゥブ','テジカルビ','カルビタン','ソルロンタン'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: '韓国鍋料理の旨みに軽い赤やロゼが合います' },
+  { keys: ['ヤンニョムチキン','フライドチキン（韓国）','韓国チキン'], tags: ['アジア料理','鶏料理','スパイシー'], color: null, body: 'ライト', reason: '甘辛ソースのチキンにロゼやフルーティー赤が合います' },
+  { keys: ['ナシゴレン','ミーゴレン','インドネシア料理'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'スパイスと甘みのバランスに軽い赤が合います' },
+  { keys: ['サテ','サタイ','ラクサ'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'ピーナッツソースやスパイスに白やロゼが合います' },
+
+  // ─── 丼・和食その他 ──────────────────────────────────────────
+  { keys: ['親子丼','かつ丼','カツ丼','牛丼','海鮮丼','天丼','うな丼','玉子丼','まぐろ丼'], tags: ['和食','肉料理'], color: null, body: 'ライト', reason: '丼のタレと旨みに軽やかなワインが合います' },
+  { keys: ['冷やし中華','ざるそば','ざる蕎麦','冷やしうどん','そうめん'], tags: ['和食'], color: '白', body: 'ライト', reason: '冷たい麺の爽やかさに辛口白がよく合います' },
+  { keys: ['おでん'], tags: ['和食','煮込み'], color: null, body: 'ライト', reason: '出汁の優しい風味に軽めのワインが合います' },
+  { keys: ['お好み焼き','たこ焼き','もんじゃ焼き'], tags: ['和食','粉もの'], color: null, body: 'ライト', reason: 'ソースの風味に軽い赤やロゼがよく合います' },
+  { keys: ['とんこつラーメン','醤油ラーメン','塩ラーメン','ラーメン','つけ麺'], tags: ['和食','エスニック'], color: null, body: 'ライト', reason: '深いスープの旨みにフルーティーなワインが合います' },
+  { keys: ['しゃぶしゃぶ','スキヤキ'], tags: ['和食','肉料理'], color: null, body: 'ライト', reason: '出汁の繊細な味に軽やかなワインが合います' },
+  { keys: ['茶碗蒸し','湯豆腐'], tags: ['和食'], color: '白', body: 'ライト', reason: 'やわらかな出汁の風味に辛口白が合います' },
+  { keys: ['焼きそば'], tags: ['和食','エスニック'], color: null, body: 'ライト', reason: 'ソースの風味に軽いロゼや赤が合います' },
+
+  // ─── ブランチ・軽食 ──────────────────────────────────────────
+  { keys: ['ブランチ','エッグベネディクト','スクランブルエッグ','目玉焼き','卵料理','ポーチドエッグ'], tags: ['前菜','卵料理'], color: null, body: 'ライト', reason: '卵のやさしい風味にロゼやスパークリングが合います' },
+  { keys: ['サンドイッチ','クラブサンド','BLT'], tags: ['洋食','前菜'], color: null, body: 'ライト', reason: '軽い食事にロゼやスパークリングがよく合います' },
+  { keys: ['スープカレー'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'スパイスのきいたスープにフルーティーな白が合います' },
+  { keys: ['シュークルート','ザワークラウト','ソーセージ','ソーセージ盛り合わせ'], tags: ['洋食','肉料理'], color: null, body: 'ミディアム', reason: '豚肉加工品の旨みにドイツ系白や軽い赤が合います' },
+  { keys: ['ムール貝','ブイヤベース'], tags: ['魚料理','フランス料理'], color: '白', body: 'ミディアム', reason: '貝・魚介のうまみに辛口白が映えます' },
+  { keys: ['ポテトフライ','フライドポテト','フリット'], tags: ['前菜','揚げ物'], color: null, body: 'ライト', reason: '揚げ物の油分をスパークリングや白がさっぱり流します' },
+  { keys: ['ピクルス','マリネ','カルパッチョ'], tags: ['前菜','魚料理'], color: '白', body: 'ライト', reason: '酸味のある前菜に辛口白やスパークリングが合います' },
+  { keys: ['生ハム','プロシュート','サラミ','シャルキュトリー'], tags: ['前菜','肉料理'], color: null, body: 'ライト', reason: '塩気のある加工肉にスパークリングや軽い赤が合います' },
+  { keys: ['スパイシーチキン','チキンウィング','フライドチキン'], tags: ['肉料理','揚げ物'], color: null, body: 'ライト', reason: '揚げチキンの旨みにロゼやフルーティー赤が合います' },
+  { keys: ['ラクレット','チーズフォンデュ','チーズフォンド'], tags: ['チーズ'], color: null, body: 'ミディアム', reason: '溶けたチーズにスイス白やしっかり赤が合います' },
+
+  // ─── インド料理 ──────────────────────────────────────────────
+  { keys: ['ビリヤニ','ビリャニ','ビリアニ'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'スパイス香るビリヤニにフルーティーな白やロゼが合います' },
+  { keys: ['バターチキン','バターチキンカレー','チキンティッカマサラ'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'クリーミーなカレーに甘口白やロゼが合います' },
+  { keys: ['タンドリーチキン','タンドリー'], tags: ['アジア料理','エスニック','肉料理'], color: null, body: 'ライト', reason: 'スパイス焼きチキンにロゼや軽い赤が合います' },
+  { keys: ['サモサ','パコラ','チャート'], tags: ['アジア料理','エスニック','前菜'], color: null, body: 'ライト', reason: '揚げスナックにスパークリングや白が合います' },
+  { keys: ['ナン','チャパティ','ロティ','パラタ'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'インドパンにフルーティーな白が合います' },
+  { keys: ['ダルカレー','ダル','豆カレー','ひよこ豆','レンズ豆'], tags: ['アジア料理','エスニック'], color: '白', body: 'ライト', reason: '豆料理に辛口白やロゼが合います' },
+  { keys: ['パラクパニール','マトンカレー','ラムカレー','シーフードカレー'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'スパイシーカレーにフルーティーな白が合います' },
+  { keys: ['ラッシー','マンゴーラッシー'], tags: ['アジア料理','デザート'], color: null, body: 'ライト', reason: 'マンゴーに甘口スパークリングが合います' },
+  { keys: ['チャイ','マサラチャイ'], tags: ['アジア料理','デザート'], color: null, body: 'ライト', reason: 'スパイス系の風味に甘口ワインが合います' },
+
+  // ─── 中東・地中海料理 ────────────────────────────────────────
+  { keys: ['フムス','ホムス'], tags: ['エスニック','前菜'], color: '白', body: 'ライト', reason: 'ひよこ豆のクリーミーさに辛口白が合います' },
+  { keys: ['ファラフェル'], tags: ['エスニック','前菜'], color: '白', body: 'ライト', reason: '揚げた豆コロッケに辛口白やロゼが合います' },
+  { keys: ['シャワルマ','ケバブ','キョフテ','コフタ','ドネルケバブ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'スパイス肉料理にミディアムの赤が合います' },
+  { keys: ['ムサカ','ムサッカ'], tags: ['エスニック','肉料理'], color: '赤', body: 'ミディアム', reason: 'ギリシャの肉とナスの重ね焼きに赤が合います' },
+  { keys: ['タジン','タジン鍋','クスクス'], tags: ['エスニック','肉料理','アジア料理'], color: null, body: 'ミディアム', reason: 'モロッコ料理のスパイスにロゼや軽い赤が合います' },
+  { keys: ['バクラヴァ','バクラバ'], tags: ['エスニック','デザート'], color: null, body: 'ライト', reason: '甘いナッツのお菓子に甘口白が合います' },
+  { keys: ['ギロス','ギロ','スブラキ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'ギリシャ肉料理に地中海ワインが合います' },
+  { keys: ['ツァツィキ','タラマサラタ','メゼ'], tags: ['エスニック','前菜'], color: '白', body: 'ライト', reason: 'ヨーグルト系前菜にギリシャ白が合います' },
+
+  // ─── アメリカ南部・BBQ ──────────────────────────────────────
+  { keys: ['スペアリブ','リブ','バックリブ','ポークリブ'], tags: ['肉料理','バーベキュー'], color: '赤', body: 'フルボディ', reason: 'スモークリブにしっかりした赤が合います' },
+  { keys: ['プルドポーク','スモークポーク','スモークチキン'], tags: ['肉料理','バーベキュー'], color: '赤', body: 'ミディアム', reason: 'スモーキーな豚肉に果実味の赤が合います' },
+  { keys: ['ブリスケット','テキサスBBQ'], tags: ['肉料理','バーベキュー'], color: '赤', body: 'フルボディ', reason: '牛の塊肉にタンニン豊かな赤が合います' },
+  { keys: ['チキンウィング','バッファローウィング','手羽'], tags: ['肉料理','揚げ物'], color: null, body: 'ライト', reason: 'スパイシーチキンにロゼやフルーティー赤が合います' },
+
+  // ─── ラテンアメリカ料理 ──────────────────────────────────────
+  { keys: ['タコス','タコ','ブリトー','ブリト','ファヒータ','エンチラーダ'], tags: ['エスニック','アメリカ料理'], color: null, body: 'ライト', reason: 'メキシカンにロゼやフルーティー白が合います' },
+  { keys: ['セビーチェ','セビチェ'], tags: ['魚料理','エスニック'], color: '白', body: 'ライト', reason: '酸味のある魚料理に辛口白が合います' },
+  { keys: ['チョリソ','コルネット','カルニタス'], tags: ['肉料理','エスニック'], color: null, body: 'ミディアム', reason: 'スパイスの効いた肉に軽い赤が合います' },
+  { keys: ['フェジョアーダ','シュラスコ'], tags: ['肉料理','エスニック'], color: '赤', body: 'フルボディ', reason: 'ブラジル肉料理にしっかりした赤が合います' },
+
+  // ─── 朝食・ブランチ ──────────────────────────────────────────
+  { keys: ['パンケーキ','ホットケーキ','パンケーキスタック'], tags: ['デザート','前菜'], color: null, body: 'ライト', reason: '甘いパンケーキに甘口スパークリングが合います' },
+  { keys: ['フレンチトースト'], tags: ['洋食','デザート'], color: null, body: 'ライト', reason: '卵と甘みにロゼやスパークリングが合います' },
+  { keys: ['ベルギーワッフル','ワッフル'], tags: ['デザート'], color: null, body: 'ライト', reason: 'ワッフルの甘みに甘口スパークリングが合います' },
+  { keys: ['グラノーラ','ミューズリー'], tags: ['デザート','前菜'], color: null, body: 'ライト', reason: 'フルーツ系に甘口白や軽いロゼが合います' },
+  { keys: ['ベーグル','クロワッサン','デニッシュ'], tags: ['洋食','前菜'], color: '白', body: 'ライト', reason: 'パン系の朝食にスパークリングやロゼが合います' },
+
+  // ─── スイーツ・デザート詳細 ──────────────────────────────────
+  { keys: ['ティラミス'], tags: ['デザート','イタリア料理'], color: null, body: 'ライト', reason: 'コーヒーと甘みに甘口白やスパークリングが合います' },
+  { keys: ['パンナコッタ'], tags: ['デザート','イタリア料理'], color: null, body: 'ライト', reason: 'やさしい甘みに甘口スパークリングが合います' },
+  { keys: ['クレームブリュレ','ブリュレ'], tags: ['デザート','フランス料理'], color: null, body: 'ライト', reason: 'カラメルの甘みに甘口白が調和します' },
+  { keys: ['マカロン','マカロニ菓子'], tags: ['デザート','フランス料理'], color: null, body: 'ライト', reason: '繊細な甘さにスパークリングロゼが合います' },
+  { keys: ['エクレア','シュークリーム','プロフィトロール'], tags: ['デザート','フランス料理'], color: null, body: 'ライト', reason: 'クリームの甘みに甘口スパークリングが合います' },
+  { keys: ['タルトタタン','アップルパイ','アップルタルト'], tags: ['デザート'], color: null, body: 'ライト', reason: 'りんごの甘酸っぱさに甘口白が合います' },
+  { keys: ['チョコレートケーキ','ガトーショコラ','フォンダンショコラ'], tags: ['デザート'], color: null, body: 'ライト', reason: '濃厚チョコに甘口赤や甘口スパークリングが合います' },
+  { keys: ['ムース','ムースショコラ','パルフェ'], tags: ['デザート','フランス料理'], color: null, body: 'ライト', reason: '軽い口当たりのデザートにスパークリングが合います' },
+  { keys: ['プリン','カスタードプリン'], tags: ['デザート'], color: null, body: 'ライト', reason: '卵の甘みに甘口白が合います' },
+  { keys: ['アイスクリーム','ジェラート','シャーベット'], tags: ['デザート'], color: null, body: 'ライト', reason: '甘冷たいデザートに甘口スパークリングが合います' },
+  { keys: ['いちごショートケーキ','ショートケーキ','ストロベリーケーキ'], tags: ['デザート'], color: null, body: 'ライト', reason: 'いちごの甘酸っぱさにロゼスパークリングが合います' },
+
+  // ─── 世界の麺料理 ────────────────────────────────────────────
+  { keys: ['フォー','バインミー','ゴイクォン'], tags: ['アジア料理','エスニック'], color: '白', body: 'ライト', reason: 'ハーブと魚醤の風味に香り豊かな白が合います' },
+  { keys: ['パッタイ','パッシーユ'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'ナンプラーと甘みにフルーティー白が合います' },
+  { keys: ['ラクサ','ミーゴレン','ナシゴレン'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'スパイシーな東南アジア料理に白やロゼが合います' },
+  { keys: ['冷麺','ビビン麺','チャプチェ'], tags: ['アジア料理','エスニック'], color: '白', body: 'ライト', reason: '冷たい麺料理に辛口白が合います' },
+  { keys: ['ジャージャー麺','炸醤麺'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: '肉みそと麺に軽めの赤が合います' },
+  { keys: ['うどん','きしめん','ほうとう'], tags: ['和食'], color: '白', body: 'ライト', reason: '出汁の風味に辛口白が合います' },
+
+  // ─── 鍋料理 ─────────────────────────────────────────────────
+  { keys: ['キムチ鍋','キムチチゲ','スンドゥブ','プデチゲ'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: '辛い鍋料理にフルーティーな白やロゼが合います' },
+  { keys: ['もつ鍋','ホルモン鍋'], tags: ['和食','肉料理'], color: '赤', body: 'ミディアム', reason: 'モツの濃い旨みにしっかりした赤が合います' },
+  { keys: ['水炊き','ちゃんこ鍋','鶏鍋'], tags: ['和食','肉料理'], color: null, body: 'ライト', reason: '出汁ベースの鍋に軽やかなワインが合います' },
+  { keys: ['石狩鍋','海鮮鍋','寄せ鍋'], tags: ['和食','魚料理'], color: '白', body: 'ライト', reason: '海鮮の旨みに辛口白が合います' },
+  { keys: ['湯豆腐','豆腐鍋','キムチ豆腐'], tags: ['和食'], color: '白', body: 'ライト', reason: 'やわらかな豆腐に辛口白が合います' },
+
+  // ─── 野菜・ベジタリアン ──────────────────────────────────────
+  { keys: ['ベジタリアン','ビーガン','菜食'], tags: ['野菜料理','前菜'], color: '白', body: 'ライト', reason: '野菜の自然な甘みに辛口白やロゼが合います' },
+  { keys: ['グリル野菜','焼き野菜','ローストベジタブル'], tags: ['野菜料理','前菜'], color: null, body: 'ライト', reason: '野菜の甘みにロゼや軽い赤が合います' },
+  { keys: ['かぼちゃスープ','コーンスープ','ビシソワーズ'], tags: ['野菜料理','前菜'], color: '白', body: 'ライト', reason: 'クリーミーなスープに辛口白が合います' },
+  { keys: ['ニョッキ','マッシュポテト','ポテト料理'], tags: ['洋食','野菜料理'], color: '白', body: 'ミディアム', reason: 'じゃがいも料理に辛口白が合います' },
+  { keys: ['アスパラガス','アスパラ'], tags: ['野菜料理','前菜'], color: '白', body: 'ライト', reason: 'アスパラの青みにソーヴィニョンブランが合います' },
+  { keys: ['マッシュルーム','きのこ料理','ポルチーニ','トリュフ'], tags: ['野菜料理','イタリア料理'], color: null, body: 'ミディアム', reason: 'きのこの土っぽい香りに赤や白どちらも合います' },
+  { keys: ['ラタトゥイユ','トマト料理','トマトソース'], tags: ['フランス料理','野菜料理'], color: null, body: 'ライト', reason: 'トマトの酸味にプロヴァンス系ワインが合います' },
+
+  // ─── 魚料理詳細 ──────────────────────────────────────────────
+  { keys: ['マグロのたたき','かつおのたたき','たたき'], tags: ['魚料理','和食'], color: '白', body: 'ライト', reason: 'たたきの旨みに辛口白が引き立てます' },
+  { keys: ['ブイヤベース'], tags: ['魚料理','フランス料理'], color: '白', body: 'ミディアム', reason: '魚介のスープに辛口白が合います' },
+  { keys: ['サーモンタルタル','マグロタルタル','フィッシュタルタル'], tags: ['魚料理','前菜'], color: '白', body: 'ライト', reason: '生魚の旨みに辛口白が合います' },
+  { keys: ['フィッシュアンドチップス','魚フライ'], tags: ['魚料理','揚げ物'], color: '白', body: 'ライト', reason: 'フライの油分に辛口白がさっぱり合います' },
+  { keys: ['イカリング','烏賊のフライ','いかフライ'], tags: ['魚料理','揚げ物'], color: '白', body: 'ライト', reason: 'イカの揚げ物に辛口白やスパークリングが合います' },
+  { keys: ['タコのカルパッチョ','蛸の刺身','タコ料理'], tags: ['魚料理','前菜'], color: '白', body: 'ライト', reason: 'タコの歯応えに辛口白が合います' },
+  { keys: ['うなぎ','鰻','ひつまぶし'], tags: ['和食','魚料理'], color: null, body: 'ミディアム', reason: 'タレの甘みにコクある白や軽い赤が合います' },
+  { keys: ['サバの味噌煮','鯖','さば'], tags: ['魚料理','和食'], color: null, body: 'ミディアム', reason: '青魚の旨みにロゼや軽い赤が合います' },
+  { keys: ['秋刀魚','さんま','塩焼き'], tags: ['魚料理','和食'], color: null, body: 'ライト', reason: '脂の乗った魚にロゼや辛口白が合います' },
+  { keys: ['ちらし寿司','手巻き寿司','のり巻き','いなり','恵方巻'], tags: ['魚料理','和食','寿司'], color: '白', body: 'ライト', reason: '寿司の酢飯と魚介に辛口白や泡が合います' },
+
+  // ─── その他よく食べられる料理 ────────────────────────────────
+  { keys: ['チキン南蛮'], tags: ['肉料理','揚げ物'], color: null, body: 'ミディアム', reason: '甘酢とタルタルに軽い赤やロゼが合います' },
+  { keys: ['ピカタ','チキンピカタ'], tags: ['洋食','肉料理'], color: '白', body: 'ミディアム', reason: '卵とチーズ衣に辛口白が合います' },
+  { keys: ['チャンプル','ゴーヤチャンプル','沖縄料理'], tags: ['和食','野菜料理'], color: null, body: 'ライト', reason: '苦みのある炒め物に辛口白やロゼが合います' },
+  { keys: ['麻婆茄子','麻婆なす'], tags: ['エスニック','スパイシー','野菜料理'], color: null, body: 'ミディアム', reason: '辛みの効いたなす料理にフルーティー赤が合います' },
+  { keys: ['ポトフ','シチュー','クリームシチュー','ビーフシチュー'], tags: ['洋食','肉料理','煮込み'], color: null, body: 'ミディアム', reason: 'コク深い煮込みに赤の渋みがマッチします' },
+  { keys: ['ソーセージ','ウインナー','ブラートヴルスト'], tags: ['肉料理','洋食'], color: null, body: 'ミディアム', reason: 'ソーセージの塩気と旨みに赤や白が合います' },
+  { keys: ['照り焼き','照り焼きチキン','てりやきバーガー'], tags: ['肉料理','和食'], color: null, body: 'ミディアム', reason: '甘辛いタレに果実味のあるワインが合います' },
+  { keys: ['肉巻き','豚バラ巻き','ベーコン巻き'], tags: ['肉料理'], color: null, body: 'ミディアム', reason: '肉の旨みに赤ワインが合います' },
+  { keys: ['ポークソテー','ポークチョップ','豚のソテー'], tags: ['肉料理'], color: null, body: 'ミディアム', reason: '豚肉のソテーに白赤どちらも合います' },
+  { keys: ['鴨料理','鴨のロースト','鴨のコンフィ'], tags: ['肉料理','フランス料理'], color: '赤', body: 'フルボディ', reason: '鴨の濃い旨みにしっかりした赤が合います' },
+  { keys: ['イノシシ','猪','ジビエ','鹿','鹿肉','ベニソン'], tags: ['肉料理'], color: '赤', body: 'フルボディ', reason: 'ジビエの野性味にタンニン豊かな赤が合います' },
+  { keys: ['カキフライ','牡蠣フライ'], tags: ['魚料理','揚げ物'], color: '白', body: 'ミディアム', reason: '牡蠣フライの旨みに辛口白が合います' },
+  { keys: ['エビフライ','海老フライ'], tags: ['魚料理','揚げ物'], color: '白', body: 'ライト', reason: 'エビの甘みに辛口白やスパークリングが合います' },
+  { keys: ['白子','白子ポン酢'], tags: ['魚料理','和食'], color: '白', body: 'ライト', reason: 'クリーミーな白子に辛口白が合います' },
+  { keys: ['穴子','あなご','穴子寿司'], tags: ['魚料理','和食'], color: null, body: 'ライト', reason: 'あなごの淡白な旨みに辛口白が合います' },
+
+  // ─── エジプト・北アフリカ料理 ───────────────────────────────
+  { keys: ['コシャリ','クシャリ','コスハリ'], tags: ['エスニック','野菜料理'], color: null, body: 'ライト', reason: 'トマトソースと豆・麺の混合にフルーティーロゼが合います' },
+  { keys: ['マジャドラ','ムジャッダラ'], tags: ['エスニック','野菜料理'], color: '白', body: 'ライト', reason: 'レンズ豆と玉ねぎの料理に辛口白が合います' },
+  { keys: ['シャクシュカ','エッグスインヘル'], tags: ['エスニック','卵料理'], color: null, body: 'ライト', reason: 'トマトと卵にロゼや軽い赤が合います' },
+  { keys: ['ターメイヤ','ファラフェル','エジプト料理'], tags: ['エスニック','前菜'], color: '白', body: 'ライト', reason: '揚げ豆料理に辛口白が合います' },
+  { keys: ['カボーブ','コフタ','エジプトカフタ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'スパイス肉料理に軽い赤が合います' },
+  { keys: ['タジン','モロッコ料理','ハリラ','チェルモラ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'モロッコスパイスにロゼや軽い赤が合います' },
+  { keys: ['ジョロフライス','アフリカ料理','エジプト','アフリカ'], tags: ['エスニック','アジア料理'], color: null, body: 'ライト', reason: 'スパイシーな炊き込みご飯にロゼが合います' },
+  { keys: ['バスティラ','パスティッラ'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: 'モロッコパイにロゼやスパークリングが合います' },
+  { keys: ['ハムス','ババガヌーシュ','ムタッバル'], tags: ['エスニック','前菜'], color: '白', body: 'ライト', reason: 'ナスのディップに辛口白が合います' },
+
+  // ─── 東欧・ロシア料理 ────────────────────────────────────────
+  { keys: ['ボルシチ','ビーツスープ'], tags: ['エスニック','野菜料理'], color: null, body: 'ライト', reason: 'ビーツの甘みにロゼや軽い赤が合います' },
+  { keys: ['ピロシキ'], tags: ['エスニック','前菜'], color: null, body: 'ライト', reason: '揚げパンにスパークリングや白が合います' },
+  { keys: ['ペリメニ','ヴァレニキ','餃子系'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: '肉詰め麺包みに軽い赤が合います' },
+  { keys: ['ストロガノフ','ビーフストロガノフ'], tags: ['エスニック','肉料理','煮込み'], color: '赤', body: 'ミディアム', reason: 'クリームとビーフにミディアム赤が合います' },
+  { keys: ['グラーシュ','グラッシュ'], tags: ['エスニック','肉料理','煮込み'], color: '赤', body: 'フルボディ', reason: 'ハンガリー牛肉煮込みにしっかり赤が合います' },
+  { keys: ['シュニッツェル','ウィンナーシュニッツェル'], tags: ['エスニック','肉料理','洋食'], color: null, body: 'ミディアム', reason: '薄切り揚げ肉に辛口白や軽い赤が合います' },
+  { keys: ['ポーランド料理','ピエロギ','ビゴス'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: '東欧の肉と野菜料理に軽い赤が合います' },
+  { keys: ['ルーマニア料理','モルドバ料理','サルマーレ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'ロールキャベツ系に軽い赤が合います' },
+  { keys: ['チェコ料理','スヴィーチコヴァー','スヴェーチコヴァー'], tags: ['エスニック','肉料理'], color: '赤', body: 'ミディアム', reason: 'チェコ牛肉料理に赤が合います' },
+
+  // ─── 北欧・スカンジナビア料理 ────────────────────────────────
+  { keys: ['スモークサーモン','スモークフィッシュ','グラブラックス'], tags: ['魚料理','前菜'], color: '白', body: 'ライト', reason: 'スモーク魚に辛口白や泡が合います' },
+  { keys: ['スウェーデン料理','ミートボール','イケアミートボール'], tags: ['肉料理','洋食'], color: null, body: 'ライト', reason: 'クリームソースの肉団子に白や軽い赤が合います' },
+  { keys: ['ニシンのマリネ','ニシン','鰊'], tags: ['魚料理','前菜'], color: '白', body: 'ライト', reason: '酸味のある魚に辛口白が合います' },
+  { keys: ['スモーブロー','デンマーク料理','オープンサンド'], tags: ['前菜','洋食'], color: '白', body: 'ライト', reason: 'オープンサンドにスパークリングや白が合います' },
+  { keys: ['ラクフィスク','フィスケグラタン'], tags: ['魚料理'], color: '白', body: 'ライト', reason: '魚のグラタンに辛口白が合います' },
+  { keys: ['フィンランド料理','サーモンスープ','ロヒケイット'], tags: ['魚料理'], color: '白', body: 'ライト', reason: 'クリーミーなサーモンスープに辛口白が合います' },
+
+  // ─── ドイツ・オーストリア料理 ────────────────────────────────
+  { keys: ['ブラートヴルスト','ヴァイスヴルスト','カリーヴルスト','ソーセージ盛り'], tags: ['肉料理','洋食'], color: null, body: 'ライト', reason: 'ソーセージにドイツ白や軽い赤が合います' },
+  { keys: ['ザワークラウト','酢キャベツ','シュークルート'], tags: ['洋食','野菜料理'], color: '白', body: 'ライト', reason: '酸味のある発酵野菜に辛口白が合います' },
+  { keys: ['プレッツェル','ブレーツェル'], tags: ['前菜','洋食'], color: null, body: 'ライト', reason: '塩気あるパンにスパークリングが合います' },
+  { keys: ['シュヴァインスハクセ','豚すね肉の煮込み','アイスバイン'], tags: ['肉料理','洋食'], color: '赤', body: 'フルボディ', reason: '豚の塊肉にしっかり赤が合います' },
+
+  // ─── イギリス・アイルランド料理 ─────────────────────────────
+  { keys: ['フィッシュアンドチップス','フィッシュ&チップス'], tags: ['魚料理','揚げ物'], color: '白', body: 'ライト', reason: '揚げ魚に辛口白やスパークリングが合います' },
+  { keys: ['サンデーロースト','ローストビーフ','ヨークシャープディング'], tags: ['肉料理','洋食'], color: '赤', body: 'フルボディ', reason: 'ロースト肉にフルボディ赤が合います' },
+  { keys: ['スコッチエッグ','コテージパイ','シェパーズパイ'], tags: ['肉料理','洋食'], color: null, body: 'ミディアム', reason: '肉と卵のパイに赤や白が合います' },
+  { keys: ['スコーン','クロテッドクリーム','アフタヌーンティー'], tags: ['デザート','前菜'], color: null, body: 'ライト', reason: 'スコーンにスパークリングやロゼが合います' },
+  { keys: ['アイリッシュシチュー','ランカシャーホットポット'], tags: ['肉料理','煮込み'], color: '赤', body: 'ミディアム', reason: '肉の煮込みにミディアム赤が合います' },
+
+  // ─── ポルトガル料理 ──────────────────────────────────────────
+  { keys: ['バカリャウ','タラ料理','ポルトガル料理'], tags: ['魚料理','エスニック'], color: '白', body: 'ミディアム', reason: '塩タラ料理にポルトガル白が合います' },
+  { keys: ['エッグタルト','パステルデナタ'], tags: ['デザート'], color: null, body: 'ライト', reason: '卵タルトに甘口スパークリングが合います' },
+  { keys: ['サルデーニャ料理','カタプラーナ'], tags: ['魚料理','エスニック'], color: '白', body: 'ミディアム', reason: '魚介の蒸し料理に辛口白が合います' },
+
+  // ─── 長崎・ご当地洋食 ─────────────────────────────────────────
+  { keys: ['トルコライス','トルコライス（長崎）','とるこ饭'], tags: ['洋食','肉料理'], color: null, body: 'ミディアム', reason: 'トンカツ・ナポリタン・ピラフの三位一体にミディアム赤やロゼが合います' },
+
+  // ─── トルコ料理 ──────────────────────────────────────────────
+  { keys: ['トルコ料理','イスカンダルケバブ','アダナケバブ','シシケバブ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'トルコ肉料理に軽い赤やロゼが合います' },
+  { keys: ['マントゥ','トルコ餃子'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: 'トルコ風餃子に軽い赤が合います' },
+  { keys: ['メルジメキョフテ','キョフテ'], tags: ['エスニック','肉料理'], color: null, body: 'ライト', reason: '肉団子にロゼや軽い赤が合います' },
+  { keys: ['ラマダン料理','イフタール'], tags: ['エスニック','アジア料理'], color: null, body: 'ライト', reason: '中東料理全般にロゼや辛口白が合います' },
+
+  // ─── ペルシャ・イラン料理 ────────────────────────────────────
+  { keys: ['チェロケバブ','ゴルメサブジ','フェセンジャン'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'ペルシャ料理の複雑なスパイスに軽い赤が合います' },
+  { keys: ['アッシュレシュテ','ゼレシュクポロウ'], tags: ['エスニック','野菜料理'], color: null, body: 'ライト', reason: 'ハーブとスパイスの料理に白やロゼが合います' },
+
+  // ─── 東南アジア詳細 ──────────────────────────────────────────
+  { keys: ['ナシレマ','マレーシア料理','ルンダン','ルンダンカレー'], tags: ['アジア料理','エスニック','スパイシー'], color: null, body: 'ライト', reason: 'ココナッツカレーにフルーティー白が合います' },
+  { keys: ['フィリピン料理','アドボ','シニガン','カレカレ'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'フィリピン料理の酸味・旨みにロゼが合います' },
+  { keys: ['インドネシア料理','サテ','ガドガド','ナシチャンプル'], tags: ['アジア料理','エスニック'], color: null, body: 'ライト', reason: 'ピーナッツソースとスパイスに白やロゼが合います' },
+  { keys: ['ミャンマー料理','ラペットゥ','モヒンガー'], tags: ['アジア料理','エスニック'], color: '白', body: 'ライト', reason: '軽やかな東南アジア料理に辛口白が合います' },
+  { keys: ['ベトナム料理','バンセオ','コムタム','ブンボーフエ'], tags: ['アジア料理','エスニック'], color: '白', body: 'ライト', reason: 'ハーブと米酢の風味に香り豊かな白が合います' },
+
+  // ─── 中国各地方料理 ──────────────────────────────────────────
+  { keys: ['北京料理','宮廷料理','北京風炒め'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: '甘辛い北京料理に軽い赤が合います' },
+  { keys: ['広東料理','飲茶','ヤムチャ','点心'], tags: ['エスニック','前菜'], color: null, body: 'ライト', reason: '繊細な広東料理にスパークリングや白が合います' },
+  { keys: ['四川料理','麻辣','花椒','山椒','四川','激辛'], tags: ['エスニック','スパイシー'], color: null, body: 'ライト', reason: '麻辣の痺れる辛さにやや甘口の白が和らげます' },
+  { keys: ['上海料理','蟹','上海蟹','シャンハイ'], tags: ['エスニック','魚料理'], color: '白', body: 'ミディアム', reason: '上海蟹の旨みに辛口白が合います' },
+  { keys: ['雲南料理','ミャンマー国境','過橋米線'], tags: ['エスニック','アジア料理'], color: null, body: 'ライト', reason: '雲南の酸味と香草に白やロゼが合います' },
+
+  // ─── 南米その他 ──────────────────────────────────────────────
+  { keys: ['アルゼンチン料理','アサード','チミチュリ'], tags: ['肉料理','バーベキュー'], color: '赤', body: 'フルボディ', reason: 'アルゼンチン肉料理にマルベックが合います' },
+  { keys: ['チリ料理','エンパナーダ','カスエラ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: 'チリの肉料理に軽い赤が合います' },
+  { keys: ['ペルー料理','セビーチェ','ロモサルタード','アジデガジナ'], tags: ['エスニック','魚料理'], color: '白', body: 'ライト', reason: 'ペルー料理の酸味と旨みに辛口白が合います' },
+  { keys: ['コロンビア料理','バンデハパイサ','アレパ'], tags: ['エスニック','肉料理'], color: null, body: 'ミディアム', reason: '豊かな肉料理に軽い赤が合います' },
+  { keys: ['ウルグアイ料理','チブリトスタンバラ'], tags: ['肉料理'], color: '赤', body: 'フルボディ', reason: '南米牛肉料理にタンニンある赤が合います' },
+
+  // ─── 日本各地の郷土料理 ─────────────────────────────────────
+  { keys: ['きりたんぽ鍋','きりたんぽ'], tags: ['和食','鍋料理'], color: null, body: 'ライト', reason: '比内地鶏の出汁に軽やかなワインが合います' },
+  { keys: ['じゃじゃ麺','盛岡じゃじゃ麺'], tags: ['和食','エスニック'], color: null, body: 'ライト', reason: '肉みそ麺料理に軽い赤が合います' },
+  { keys: ['いちご煮','三陸料理','海鮮汁'], tags: ['魚料理','和食'], color: '白', body: 'ライト', reason: '海の幸に辛口白が合います' },
+  { keys: ['皿うどん','長崎ちゃんぽん','ちゃんぽん'], tags: ['和食','エスニック'], color: null, body: 'ライト', reason: '海鮮入り麺に辛口白やロゼが合います' },
+  { keys: ['明石焼き','たこ焼き','大阪料理'], tags: ['和食','魚料理'], color: '白', body: 'ライト', reason: '出汁と卵の風味に辛口白が合います' },
+  { keys: ['郷土料理','地方料理','家庭料理','定食'], tags: ['和食'], color: null, body: 'ライト', reason: '日本の家庭料理に軽やかなワインが合います' },
+  { keys: ['芋煮','芋煮会','山形料理'], tags: ['和食','煮込み'], color: null, body: 'ライト', reason: '里芋と肉の煮込みに軽やかなワインが合います' },
+  { keys: ['博多料理','水炊き','もつ煮','福岡料理'], tags: ['和食','肉料理'], color: null, body: 'ライト', reason: '博多の旨み料理に軽い赤やロゼが合います' },
+  { keys: ['沖縄そば','ソーキそば','ラフテー'], tags: ['和食','肉料理'], color: null, body: 'ライト', reason: '豚の旨みと出汁に軽い赤やロゼが合います' },
+  { keys: ['きんぴら','ひじき','切り干し大根','常備菜'], tags: ['和食','野菜料理'], color: null, body: 'ライト', reason: '和食の副菜に軽やかな白が合います' },
+
+  // ─── 屋台・ストリートフード ─────────────────────────────────
+  { keys: ['屋台料理','ストリートフード','フードトラック'], tags: ['エスニック','前菜'], color: null, body: 'ライト', reason: '気軽な屋台料理にロゼやスパークリングが合います' },
+  { keys: ['クレープ屋台','たい焼き','今川焼き','大判焼き'], tags: ['デザート'], color: null, body: 'ライト', reason: '甘い和スイーツに甘口スパークリングが合います' },
+  { keys: ['肉まん','あんまん','中華まん'], tags: ['エスニック','前菜'], color: null, body: 'ライト', reason: '蒸した点心系にスパークリングが合います' },
+  { keys: ['焼き芋','スイートポテト','芋スイーツ'], tags: ['デザート','和食'], color: null, body: 'ライト', reason: '芋の甘みに甘口白やスパークリングが合います' },
+
+  // ─── ヴィーガン・グルテンフリー ─────────────────────────────
+  { keys: ['ヴィーガン','完全菜食','プラントベース','植物性'], tags: ['野菜料理'], color: '白', body: 'ライト', reason: '植物性料理に辛口白やロゼが幅広く合います' },
+  { keys: ['グルテンフリー','セリアック','小麦抜き'], tags: ['野菜料理','前菜'], color: null, body: 'ライト', reason: '素材本来の味に辛口白が引き立てます' },
+  { keys: ['ローフード','生食','ロービーガン'], tags: ['野菜料理'], color: '白', body: 'ライト', reason: '生野菜の瑞々しさに辛口白が合います' },
+  { keys: ['マクロビ','マクロビオティック'], tags: ['野菜料理'], color: '白', body: 'ライト', reason: '穀物と野菜中心の食事に軽やかな白が合います' },
+
+  // ─── ダイエット・ヘルシー ───────────────────────────────────
+  { keys: ['ダイエット料理','ヘルシー料理','低カロリー','減塩'], tags: ['野菜料理','前菜'], color: '白', body: 'ライト', reason: '軽い料理にすっきりした辛口白が合います' },
+  { keys: ['サラダチキン','蒸し鶏','鶏むね肉'], tags: ['鶏料理','肉料理'], color: '白', body: 'ライト', reason: 'ヘルシーチキンに辛口白が合います' },
+  { keys: ['豆腐料理','麻婆豆腐','豆腐ハンバーグ','揚げ出し豆腐'], tags: ['和食','野菜料理'], color: null, body: 'ライト', reason: '豆腐の優しい味にフルーティーな白や軽い赤が合います' },
+
+  // ─── おつまみ・スナック ──────────────────────────────────────
+  { keys: ['ポップコーン','チップス','ポテトチップス','クラッカー'], tags: ['前菜','デザート'], color: null, body: 'ライト', reason: '軽いスナックにスパークリングや白が合います' },
+  { keys: ['ナッツ','アーモンド','カシューナッツ','ミックスナッツ'], tags: ['前菜'], color: null, body: 'ライト', reason: 'ナッツの塩気に白やスパークリングが合います' },
+  { keys: ['ドライフルーツ','干し葡萄','レーズン','プルーン'], tags: ['デザート','前菜'], color: null, body: 'ライト', reason: 'ドライフルーツの甘みに甘口白が合います' },
+  { keys: ['チョコレート','ボンボン','トリュフチョコ','カカオ'], tags: ['デザート'], color: null, body: 'ライト', reason: 'チョコの苦みに甘口赤やスパークリングが合います' },
+  { keys: ['枝豆','だだちゃ豆','黒豆'], tags: ['前菜','和食'], color: null, body: 'ライト', reason: '豆のさっぱり旨みにロゼや辛口白が合います' },
+];
+
+
+// ─── ボトルSVGジェネレーター ─────────────────────────────────
+function bottleSVG(cat, color) {
+  var isSpark = cat === 'スパークリング';
+  var isRose  = color === 'ロゼ';
+  var isWhite = color === '白';
+  var isRed   = color === '赤';
+
+  var bodyColor, neckColor, labelBg, shine, foil;
+  if (isSpark) {
+    bodyColor = '#2d6a4f'; neckColor = '#1b4332';
+    labelBg = 'rgba(255,220,80,0.25)'; foil = '#fcd34d';
+  } else if (isRose) {
+    bodyColor = '#be185d'; neckColor = '#9d174d';
+    labelBg = 'rgba(253,186,212,0.2)'; foil = '#f9a8d4';
+  } else if (isWhite) {
+    bodyColor = '#3d6b2e'; neckColor = '#2d4f22';
+    labelBg = 'rgba(253,230,138,0.25)'; foil = '#fef08a';
+  } else {
+    bodyColor = '#6b1e1e'; neckColor = '#450a0a';
+    labelBg = 'rgba(254,202,202,0.15)'; foil = '#fca5a5';
+  }
+
+  var bubbles = isSpark
+    ? '<circle cx="34" cy="90" r="1.5" fill="rgba(255,255,255,0.4)"><animate attributeName="cy" from="90" to="60" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/></circle>' +
+      '<circle cx="40" cy="100" r="1" fill="rgba(255,255,255,0.3)"><animate attributeName="cy" from="100" to="65" dur="2.5s" repeatCount="indefinite" begin="0.8s"/><animate attributeName="opacity" from="0.5" to="0" dur="2.5s" repeatCount="indefinite" begin="0.8s"/></circle>' +
+      '<circle cx="29" cy="95" r="1.2" fill="rgba(255,255,255,0.35)"><animate attributeName="cy" from="95" to="62" dur="1.8s" repeatCount="indefinite" begin="1.4s"/><animate attributeName="opacity" from="0.5" to="0" dur="1.8s" repeatCount="indefinite" begin="1.4s"/></circle>'
+    : '';
+
+  return '<svg class="bottle-svg" viewBox="0 0 68 130" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs>' +
+      '<linearGradient id="bg' + color + '" x1="0" y1="0" x2="1" y2="0">' +
+        '<stop offset="0%" stop-color="' + neckColor + '"/>' +
+        '<stop offset="40%" stop-color="' + bodyColor + '"/>' +
+        '<stop offset="100%" stop-color="' + neckColor + '"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    // コルク/フォイル
+    '<rect x="27" y="4" width="14" height="10" rx="3" fill="' + foil + '" opacity="0.9"/>' +
+    // ネック
+    '<rect x="28" y="13" width="12" height="26" rx="3" fill="url(#bg' + color + ')"/>' +
+    // ショルダー
+    '<path d="M28,38 Q18,50 16,62 L16,112 Q16,122 34,122 Q52,122 52,112 L52,62 Q50,50 40,38 Z" fill="url(#bg' + color + ')"/>' +
+    // ラベル
+    '<rect x="19" y="72" width="30" height="32" rx="4" fill="' + labelBg + '" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>' +
+    '<line x1="22" y1="79" x2="46" y2="79" stroke="rgba(255,255,255,0.25)" stroke-width="0.6"/>' +
+    '<line x1="22" y1="97" x2="46" y2="97" stroke="rgba(255,255,255,0.25)" stroke-width="0.6"/>' +
+    '<rect x="25" y="82" width="18" height="12" rx="2" fill="rgba(255,255,255,0.08)"/>' +
+    // 光沢
+    '<path d="M22,40 Q24,55 24,80" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+    // バブル
+    bubbles +
+  '</svg>';
+}
+
+// ─── 人間味あるソムリエコメント ────────────────────────────────
+var SOMMELIER_COMMENTS = {
+  'ステーキ': [
+    'ステーキには、やっぱり赤！このワインのタンニンがお肉の脂をほどよく受け止めてくれます。一口食べてワインを含んだとき、「これだ」と思えるはずです。',
+    'ジューシーなお肉と、果実味あふれるこのワイン。ちょっと贅沢な夜にぴったりの組み合わせです。焼き上がりに少し赤みが残るくらいがベストマッチです。',
+  ],
+  '鮭のムニエル': [
+    'バターで香ばしく焼いた鮭に、このワインの爽やかな酸味がすごく合います。レモンをキュッと搾るような感覚で、料理がぐっと引き締まります。',
+    '鮭のコクと旨みを、すっきりした白ワインが上品に支えてくれます。バターのリッチさに負けない、程よいコクも持ち合わせています。',
+  ],
+  '餃子': [
+    '意外と思うかもしれませんが、餃子とワインは相性抜群です！ニンニクや生姜の風味に、このワインのフルーティーさが寄り添ってくれます。',
+    '脂がのった餃子を、このワインがさっぱりと流してくれます。焼き餃子でも蒸し餃子でも、試してみてください。きっと新しい発見がありますよ。',
+  ],
+  '唐揚げ': [
+    '揚げ物とワインって？と思った方、ぜひ試してみてください。唐揚げのジューシーさと、このワインの酸味が絶妙にマッチします。',
+    'カリッとした唐揚げの後、このワインをひと口。揚げ物の油っぽさがすっと消えて、次の一口がまた食べたくなります。',
+  ],
+  '牡蠣': [
+    '牡蠣に白ワイン、これは定番中の定番。磯の香りとミネラル感が見事に共鳴します。生牡蠣でも焼き牡蠣でも間違いなしです。',
+    'このワインのキリッとした酸味が、牡蠣のクリーミーな旨みをいっそう引き立てます。まるで海辺でグラスを傾けているような気分になりますよ。',
+  ],
+  'パスタ': [
+    'イタリア料理にはイタリアワインが合う、とよく言いますが本当にそうなんです。このワインの酸味がトマトソースと見事に溶け合います。',
+    'パスタのソースがどんなものでも、このワインは上手に寄り添ってくれます。食卓がちょっとイタリアンなカフェみたいになりますよ。',
+  ],
+  '天ぷら': [
+    '天ぷらの軽やかな衣と、すっきりした辛口白はとても相性がいいです。油っぽさをさらりと流して、素材の味を引き立ててくれます。',
+    '天ぷらって和食ですが、白ワインと合わせると新鮮な発見があります。特に海老や白身魚の天ぷらには、このワインがよく合います。',
+  ],
+  'すき焼き': [
+    'すき焼きの甘辛いタレと、果実味豊かなこのワイン。和洋折衷の豊かな味わいになります。日本のすき焼きと海外のワインが仲良くなった瞬間です。',
+    '卵をからめた柔らかい牛肉に、このワインがとてもよく合います。甘みのあるタレにも負けない果実味が魅力です。',
+  ],
+  '寿司': [
+    '刺身や寿司には、できればミネラル感のある辛口白を。このワインのすっきりした酸味が、生魚の旨みをやさしく引き立ててくれます。',
+    '酢飯の爽やかな酸味と、このワインの酸味がリズムよく響き合います。まるでシャリとネタのように、いいペアです。',
+  ],
+  'チーズ': [
+    'チーズはワインの最高のパートナーです。このワインの深みが、チーズの複雑な旨みと重なり合います。ゆっくり時間をかけて楽しんでください。',
+    'どんなチーズにも合わせやすいワインです。クリーミーなカマンベールはもちろん、熟成の進んだチーズにも負けない存在感があります。',
+  ],
+  'カレー': [
+    'カレーとワイン、意外ですがスパイスの香りとフルーティーなワインは不思議と合います。やや甘みのあるタイプが特におすすめです。',
+    '辛口のカレーを食べた後、このワインをひと口。スパイスの刺激が和らいで、旨みだけが口に広がります。試す価値ありです！',
+  ],
+  '焼き鳥': [
+    '焼き鳥はワインとの相性が意外といいんです。タレなら赤、塩なら白やロゼ。このワインは両方の焼き鳥に対応できる懐の深さがあります。',
+    '炭の香りとこのワインの果実味、なんともいい組み合わせです。居酒屋気分で気軽に楽しめる、飾らないペアリングです。',
+  ],
+  'デザート': [
+    'デザートの後にもう一杯、というときにぴったりです。甘いもの同士が寄り添うように、やさしく口の中でまとまります。',
+    '食後のひとときを、このワインとともに。甘みがあって飲みやすく、特別な夜の締めくくりにふさわしいです。',
+  ],
+  'デフォルト': [
+    'このワインはとても食事に合わせやすいタイプです。料理の味を邪魔せず、やさしく寄り添ってくれます。まずは気軽に試してみてください。',
+    '産地の個性と品種の特徴がバランスよく出ているワインです。初めての方にも飲みやすく、食卓をほんのり豊かにしてくれます。',
+    'コスパのいいワインです。値段に驚いてほしいくらい、しっかりした味わいがあります。毎日の食卓にも特別な日にも使えます。',
+  ],
+};
+
+// ─── ペアリング理由（なぜ合うか）───────────────────────────────
+var PAIRING_WHY = {
+  'ステーキ': {
+    icon: '🥩🍷',
+    why: 'お肉の脂分（動物性脂肪）に、ワインのタンニン（渋み成分）が化学的に結合することで、脂っこさがほぐれて旨みだけが残ります。フルボディの赤は赤身肉のタンパク質とも相性がよく、口の中で旨みが増幅されます。'
+  },
+  '鮭のムニエル': {
+    icon: '🐟🫙',
+    why: '鮭のDHA・EPAによる脂分に対して、白ワインの爽やかな酸味（主にリンゴ酸・酒石酸）が油分をすっきり洗い流します。バターのコクにも負けない程よい酸味が料理全体を引き締めます。'
+  },
+  '餃子': {
+    icon: '🥟🍃',
+    why: '餃子のニンニク・生姜の刺激臭を、ワインの果実の甘みと香りが和らげます。また、焼き餃子の香ばしさ（メイラード反応による焦げ）に、やや酸味のあるワインがよくなじみます。'
+  },
+  '唐揚げ': {
+    icon: '🍗✨',
+    why: '揚げ物のコーティングされた油分を、白ワインやロゼの酸味が乳化させてさっぱり感を演出します。炭酸系（スパークリング）なら、泡が油を物理的に洗い流す効果も。'
+  },
+  '牡蠣': {
+    icon: '🦪🌊',
+    why: '牡蠣が育つ海のミネラル分（鉄・亜鉛・ヨウ素など）と、白ワインが持つミネラル感が「産地の共鳴」として響き合います。辛口白の高い酸味は牡蠣の生臭みを中和し、クリーミーな旨みだけを引き立てます。'
+  },
+  'パスタ': {
+    icon: '🍝🫒',
+    why: 'トマトソースのクエン酸・リンゴ酸と、赤ワインや白ワインの酸味が同じ「酸」の仲間として自然に溶け合います。イタリア産ワインはイタリア料理の酸味・ハーブに合うよう長い歴史の中で育まれてきました。'
+  },
+  '天ぷら': {
+    icon: '🍤💨',
+    why: '天ぷらの薄衣はとても繊細。強いタンニンの赤ワインは素材の味を潰してしまいます。辛口の白ワインは酸味が衣の軽さを活かし、魚や野菜の素材の甘みを引き立てます。'
+  },
+  'すき焼き': {
+    icon: '🍲🍯',
+    why: '醤油・砂糖・みりんの甘辛いタレは、果実味豊かな赤ワインの甘みと「同じ方向」で調和します。タレのアミノ酸（旨み成分）とワインのポリフェノールが口の中でコクを増幅させます。'
+  },
+  '寿司': {
+    icon: '🐠🍶',
+    why: '酢飯のお酢（酢酸）の風味と、白ワインの酒石酸・リンゴ酸が同じ酸味のカテゴリとして自然につながります。生魚の旨み成分（グルタミン酸）は、ミネラル感のあるワインと合わせると相乗効果で旨みが増します。'
+  },
+  'チーズ': {
+    icon: '🧀🍇',
+    why: 'チーズのタンパク質・脂肪分が赤ワインのタンニンを柔らかくし、ワインの渋みが和らぎます。また塩気のあるチーズはワインの果実の甘みをより際立たせる「対比効果」があります。'
+  },
+  'カレー': {
+    icon: '🍛🌶️',
+    why: 'スパイスの辛み・苦みは、やや甘みのあるワインの糖分が和らげます。辛いものを食べた後にフルーティーなワインを飲むと、甘みが辛みを中和して口の中がリセットされます。'
+  },
+  '焼き鳥': {
+    icon: '🍢🔥',
+    why: '炭火で焼いた食材の「焦げ香」（ピラジン類）は、赤ワインや樽熟白の「スモーキーさ」と同じ系統の香り成分を持ちます。似た香り同士が「類似の調和」として合わさり、相乗効果が生まれます。'
+  },
+  'デザート': {
+    icon: '🍰🌸',
+    why: '甘い食べ物に辛口ワインを合わせると、ワインが酸っぱく感じられてしまいます。甘さにはやや甘口のワインを合わせることで、「対等なパートナー」として調和します。'
+  },
+  '肉料理': {
+    icon: '🥩⚗️',
+    why: '肉の動物性脂肪とタンパク質に、赤ワインのタンニン（ポリフェノール）が結合して脂をほぐします。肉の旨み成分アミノ酸とワインの成分が口の中でコクを増幅させます。'
+  },
+  '魚料理': {
+    icon: '🐟🌿',
+    why: '魚の油分に白ワインの酸味がよく合います。「赤ワインと魚は合わない」といわれますが、それはタンニンが魚の鉄分と反応して生臭みを強めるから。辛口白はその心配がありません。'
+  },
+  'デフォルト': {
+    icon: '🍷💡',
+    why: 'ワインと料理のペアリングは「産地の一致」「強さのバランス」「風味の調和か対比」が基本原則です。このワインはバランスのよい風味で、さまざまな料理に柔軟に合わせられます。'
+  },
+};
+
+function buildComment(wine, matched) {
+  var country = wine['産地国'] || '';
+  var grape   = wine['品種']   || '';
+  var dry     = wine['辛口甘口'] || '';
+  var body    = wine['ボディ'] || '';
+  var pairing = wine['料理ペアリング'] || '';
+
+  var key = 'デフォルト';
+  if (matched) {
+    matched.keys.forEach(function(k) { if (SOMMELIER_COMMENTS[k]) key = k; });
+    if (key === 'デフォルト') {
+      matched.tags.forEach(function(t) { if (SOMMELIER_COMMENTS[t]) key = t; });
+    }
+  }
+
+  var pool = SOMMELIER_COMMENTS[key] || SOMMELIER_COMMENTS['デフォルト'];
+  var baseComment = pool[Math.floor(Math.random() * pool.length)];
+
+  var whyKey = 'デフォルト';
+  if (matched) {
+    matched.keys.forEach(function(k) { if (PAIRING_WHY[k]) whyKey = k; });
+    if (whyKey === 'デフォルト') {
+      matched.tags.forEach(function(t) { if (PAIRING_WHY[t]) whyKey = t; });
+    }
+  }
+  var whyData = PAIRING_WHY[whyKey] || PAIRING_WHY['デフォルト'];
+
+  var info = country + '産・' + grape + '（' + dry + '、' + body + 'ボディ）。よく合う料理：' + pairing;
+  return { comment: baseComment, why: whyData, info: info };
+}
+
+// ─── レシピ辞書 ─────────────────────────────────────────────
+var RECIPES = {
+  // ─── 肉料理 ───────────────────────────────────────────────────
+  'ステーキ': { title: 'ガーリックバターステーキ', steps: [
+    '牛肉は焼く30分前に冷蔵庫から出し、室温に戻す。塩・こしょうをしっかりふる',
+    'フライパンを強火でよく熱し、サラダ油をひいて肉を入れる（片面2〜3分、動かさない）',
+    '裏返してバターとつぶしたにんにくを加え、溶けたバターをスプーンでかけながら焼く（アロゼ）',
+    'アルミホイルで包んで5分休ませてから切り分け、肉汁が落ち着いたところで盛り付ける'
+  ]},
+  'ハンバーグ': { title: '煮込みハンバーグ トマトソース', steps: [
+    '合いびき肉200g・玉ねぎ（みじん切り炒め）・卵・パン粉・牛乳・塩こしょうをよくこねる',
+    '空気を抜きながら小判形に成形し、中央を少し凹ませる',
+    'フライパンに油を熱し、中火で両面に焼き色をつける（各2分）',
+    'トマト缶・赤ワイン・コンソメを加えてふたをし、弱火で15分煮込む。仕上げにバターを加えてとろみをつける'
+  ]},
+  '煮込みハンバーグ': { title: '煮込みハンバーグ トマトソース', steps: [
+    '合いびき肉200g・玉ねぎ（みじん切り炒め）・卵・パン粉・牛乳・塩こしょうをよくこねる',
+    '空気を抜きながら小判形に成形し、中央を少し凹ませる',
+    'フライパンに油を熱し、中火で両面に焼き色をつける（各2分）',
+    'トマト缶・赤ワイン・コンソメを加えてふたをし、弱火で15分煮込む。仕上げにバターを加えてとろみをつける'
+  ]},
+  '牛肉の赤ワイン煮': { title: '牛肉の赤ワイン煮込み', steps: [
+    '牛すね肉または肩ロースを大きめに切り、塩・こしょうして薄力粉をまぶす',
+    '鍋にオリーブオイルを熱し、牛肉の表面をしっかり焼き付ける',
+    '玉ねぎ・にんじん・セロリ・にんにくを加えて炒め、赤ワイン200ml・トマト缶を加える',
+    'ブーケガルニを入れ、弱火で1.5〜2時間煮込む。塩で味を調えパセリを散らす'
+  ]},
+  'ローストビーフ': { title: 'シンプルローストビーフ', steps: [
+    '牛もも肉（300g）を室温に戻し、塩・こしょう・にんにく（すりおろし）をすり込む',
+    'フライパンで全面を強火で焼き色をつける（各1分）',
+    '100℃のオーブンで45〜60分焼き、中心温度が55℃になったら取り出す',
+    'アルミホイルで包んで10分休ませ、薄くスライスする。醤油・みりん・わさびを添えて'
+  ]},
+  'ラム': { title: 'ラムチョップのハーブ焼き', steps: [
+    'ラムチョップにローズマリー・タイム・にんにく・オリーブオイルを揉み込み30分置く',
+    'フライパンを強火で熱し、骨側から焼き始める',
+    '片面2〜3分ずつ焼き、肉の中心がピンク色になったら取り出す',
+    'レモンを搾り、ミントソース（ミント・砂糖・酢）を添えて盛り付ける'
+  ]},
+  'ローストポーク': { title: 'ローストポーク りんごソース', steps: [
+    '豚肩ロースに塩・こしょう・マスタード・ハーブ（タイム・ローズマリー）を塗る',
+    '180℃のオーブンで1〜1.5時間（竹串を刺して透明な肉汁が出るまで）焼く',
+    '取り出してアルミホイルで包み10分休ませる',
+    'フライパンで焼き汁・りんご汁・白ワインを煮詰めソースを作り、薄切り肉にかける'
+  ]},
+  '豚の角煮': { title: '豚バラ肉の角煮', steps: [
+    '豚バラブロック500gを大きめに切り、熱したフライパンで表面をしっかり焼く',
+    '鍋に移し、水・醤油・みりん・酒・砂糖・生姜を加えて落としぶたをする',
+    '弱火で1〜1.5時間煮込む（途中で上下を返す）',
+    '半熟ゆで卵を加えてさらに20分煮て味を含ませ、からし・ほうれん草を添えて盛る'
+  ]},
+  '焼き鳥': { title: '塩・タレ 焼き鳥', steps: [
+    '鶏もも肉・ねぎ・砂肝などを串に刺す（皮はしっかり張るよう包む）',
+    '【塩】塩・こしょう・ごま油を全体にまぶして焼く',
+    '【タレ】醤油・みりん・酒・砂糖を煮詰めたタレを塗りながら焼く',
+    'グリルまたは焼き網で強火・遠火で10〜12分、しっかり焦げ目をつける'
+  ]},
+  'ラムチョップ': { title: 'ラムチョップのハーブ焼き', steps: [
+    'ラムチョップにローズマリー・タイム・にんにく・オリーブオイルを揉み込み30分置く',
+    'フライパンを強火で熱し、骨側から焼き始める',
+    '片面2〜3分ずつ焼き、肉の中心がピンク色になったら取り出す',
+    'レモンを搾り、ミントソース（ミント・砂糖・酢）を添えて盛り付ける'
+  ]},
+
+  // ─── 魚・海鮮料理 ─────────────────────────────────────────────
+  '鮭のムニエル': { title: '鮭のムニエル レモンバターソース', steps: [
+    '鮭に塩・こしょうをして10分置き、水分をペーパーで拭き取って薄力粉をまぶす',
+    'フライパンにバターを熱し、皮目から中火で3分焼く',
+    'ひっくり返して2分焼き、取り出してアルミホイルで包む',
+    '残ったフライパンにレモン汁・白ワイン・バターを加えて煮詰め、ソースを作って鮭にかける'
+  ]},
+  '牡蠣': { title: '牡蠣の白ワイン蒸し', steps: [
+    '牡蠣を塩水（3%）でやさしく洗い、殻付きの場合は平らな面を上にして並べる',
+    'フライパンに白ワイン50ml・エシャロット（みじん切り）を入れ、牡蠣を並べる',
+    'ふたをして中火で3〜4分蒸す（口が開いたらOK）',
+    'バター・パセリを加えてソースをからめ、バゲットと一緒に盛り付ける'
+  ]},
+  '刺身': { title: '刺身の盛り合わせ＆漬けまぐろ', steps: [
+    'まぐろは醤油・みりん・酒を合わせたタレに30分漬ける（漬けまぐろ）',
+    '鯛・サーモン・ホタテは冷えた状態で薄く削ぎ切り、氷水で締める',
+    'けん（大根の千切り）・大葉・わさびを皿に敷き、美しく盛り付ける',
+    'ポン酢・ゆずこしょう・塩+オリーブオイルなど複数のつけダレを添える'
+  ]},
+  'アクアパッツァ': { title: 'アクアパッツァ', steps: [
+    '白身魚（鯛・タラ）に塩・こしょうしてオリーブオイルで皮目から焼く',
+    'にんにく・あさり・プチトマト・オリーブを加える',
+    '白ワイン100ml・水100mlを加えてふたをし、中火で10分蒸し煮',
+    'イタリアンパセリを散らし、バゲットを添えてスープごと食べる'
+  ]},
+  '海鮮パスタ': { title: '海鮮のアーリオオーリオパスタ', steps: [
+    'にんにく（薄切り）を低温のオリーブオイルでゆっくり香りを出す',
+    'えび・あさり・いか等の海鮮を加えて炒め、白ワインをふって蒸らす',
+    'ゆでたパスタとゆで汁を加え、乳化させながらからめる',
+    '仕上げにレモン汁・イタリアンパセリ・EXオリーブオイルで風味をつける'
+  ]},
+  'カルパッチョ': { title: '真鯛のカルパッチョ', steps: [
+    '真鯛（または鮭）のさくをラップで包み、冷凍庫で30分半冷凍して薄く切りやすくする',
+    '薄切りにして皿に広げ、塩・こしょうをふる',
+    'レモン汁・EXオリーブオイル・にんにく（すりおろし少量）を混ぜたソースをかける',
+    'ケッパー・フリルレタス・ピンクペッパー・パルミジャーノを散らして完成'
+  ]},
+
+  // ─── 和食 ───────────────────────────────────────────────────
+  '餃子': { title: 'パリパリ羽根つき餃子', steps: [
+    '豚ひき肉・キャベツ（塩もみして水分を絞る）・ニラ・生姜・にんにくをよく混ぜ、餃子の皮で包む',
+    '油をひいたフライパンに並べ、中火で底面を1〜2分焼いて焼き色をつける',
+    '水150ml（または薄力粉を溶いた水）を加えてふたをし、3〜4分蒸し焼き',
+    'ふたを取り水分を飛ばし、ごま油を回し入れてパリッとしたら完成。酢醤油・ラー油で食べる'
+  ]},
+  '唐揚げ': { title: 'ふっくらジューシー唐揚げ', steps: [
+    '鶏もも肉を一口大に切り、醤油・酒・おろし生姜・おろしにんにくで15分漬ける',
+    '片栗粉をたっぷりまぶしてよく揉み込む',
+    '160℃の油で4〜5分揚げ、一度取り出して3分休ませる',
+    '油を180℃に上げ、30秒〜1分で二度揚げしてカリッとさせる。レモンを搾って食べる'
+  ]},
+  'すき焼き': { title: 'すき焼き（関東風）', steps: [
+    'すき焼きのタレを作る：醤油・みりん・酒・砂糖を2:2:2:1の割合で合わせる',
+    '牛脂で鍋を熱し、牛肉を広げて焼き、砂糖を振りかける',
+    '肉に焼き色がついたらタレを加え、ネギ・焼き豆腐・しらたき・春菊・麩を入れる',
+    '溶き卵にくぐらせて食べる。アルコールは飛ばすため最初は強めの火加減で'
+  ]},
+  '天ぷら': { title: '海老と野菜の天ぷら', steps: [
+    '天ぷら粉と冷水（または氷水）を8:10の割合で、さっくり混ぜる（ダマが残るくらいでOK）',
+    '海老（背わたを取る）・かぼちゃ・ナス・大葉・れんこんを準備する',
+    '170〜180℃の油で衣をつけてさっと揚げる（海老2分、野菜1〜1.5分）',
+    '天つゆ（だし4:醤油1:みりん1）と大根おろし・生姜で食べる'
+  ]},
+  'お好み焼き': { title: '大阪風お好み焼き', steps: [
+    '薄力粉・だし・卵・千切りキャベツ・天かすを混ぜ、豚バラ肉を上にのせる',
+    'フライパンに油を熱して生地を流し込み、中火で4〜5分焼く',
+    'ひっくり返してさらに4〜5分焼く（竹串で刺して生地がつかなければOK）',
+    'ソース・マヨネーズ・かつお節・青のり・紅生姜を好みでトッピングする'
+  ]},
+  'とんかつ': { title: 'サクサクとんかつ', steps: [
+    '豚ロース肉の筋を切り、塩・こしょうして小麦粉→溶き卵→パン粉の順に衣をつける',
+    '160℃の油で3〜4分揚げ、一度取り出す',
+    '油を180℃に上げ、1分で二度揚げしてカリッとさせる',
+    '油をよく切り、キャベツの千切り・辛子・ソースを添えて盛り付ける'
+  ]},
+  'しゃぶしゃぶ': { title: 'しゃぶしゃぶ ポン酢＆ごまだれ', steps: [
+    '昆布を水から入れた鍋を60℃ほどに温め、沸騰直前で昆布を取り出す',
+    '薄切り牛肉（または豚肉）をさっとくぐらせ、ピンク色が消えたら引き上げる',
+    '【ポン酢】柚子こしょう・ポン酢・大根おろし・ネギ',
+    '【ごまだれ】練りごま・だし醤油・砂糖・酢・ごま油。締めは雑炊またはうどんで'
+  ]},
+  '焼き魚': { title: '塩焼き魚（さば・さんま）', steps: [
+    '魚に塩を振って10〜15分置き、出てきた水分をペーパーで拭き取る',
+    'グリルを十分に予熱し、皮目を上にして強火で焼く（さんま8〜10分、さば10〜12分）',
+    '皮がパリッとして焦げ目がついたら裏返し、さらに3〜4分焼く',
+    '大根おろし・すだち・醤油を添えて盛り付ける'
+  ]},
+  '茶碗蒸し': { title: 'なめらかな茶碗蒸し', steps: [
+    '卵2個・だし300ml・薄口醤油・みりんを合わせてよく混ぜ、裏ごしする',
+    '器に海老・鶏肉・ぎんなん・三つ葉を入れ、卵液を静かに注ぐ',
+    'ふたをして蒸気の上がった蒸し器で弱火8〜12分蒸す（箸を刺して透明な汁が出ればOK）',
+    '蒸らし2〜3分後に開け、三つ葉を飾って完成'
+  ]},
+
+  // ─── 洋食 ───────────────────────────────────────────────────
+  'ピザ': { title: 'マルゲリータピザ', steps: [
+    '市販のピザ生地またはナン（なければフライパン用生地：強力粉・イースト・水・塩・油をこねて1時間発酵）',
+    'トマトソース（ホールトマト・にんにく・オリーブオイル・塩）を薄くのばす',
+    'モッツァレラチーズをちぎってのせ、200〜250℃のオーブンで10〜13分焼く',
+    '焼き上がりに生バジル・EXオリーブオイルを回しかけて完成'
+  ]},
+  'パスタ': { title: 'シンプルトマトソースパスタ', steps: [
+    'にんにく（みじん切り）をオリーブオイルで弱火からゆっくり炒め、香りを出す',
+    'ホールトマト缶を加えてつぶし、塩・こしょう・バジルで味を整え15分煮詰める',
+    'パスタを表示時間より1分短くゆでる（ゆで汁は取っておく）',
+    'フライパンにパスタ・ゆで汁少量を加えてソースと絡め、仕上げにオリーブオイルをひとまわし'
+  ]},
+  'カルボナーラ': { title: 'カルボナーラ（本格ローマ風）', steps: [
+    'パンチェッタ（または厚切りベーコン）を炒め、白ワインをふって火を通す',
+    '卵黄3個・全卵1個・ペコリーノロマーノ（またはパルミジャーノ）・黒こしょうを混ぜる',
+    'ゆでたてパスタとパンチェッタを合わせ、火を止めてから卵液を加える（火が通りすぎないよう注意）',
+    'ゆで汁で濃度を調整し、チーズと黒こしょうを追加して盛り付ける'
+  ]},
+  'リゾット': { title: 'パルミジャーノリゾット', steps: [
+    '玉ねぎ・セロリ（みじん切り）をバターで透明になるまで炒め、米（洗わない）を加えて炒める',
+    '白ワイン100mlを加えて水分が飛んだら、温めたチキンブロスを少量ずつ加える',
+    '15〜17分かけて少量ずつブロスを足しながらゆっくり混ぜ続ける',
+    '火を止めてバター・パルミジャーノを加えてマンテカーレし、なめらかに仕上げる'
+  ]},
+  'ラザニア': { title: 'ミートラザニア', steps: [
+    '合いびき肉・玉ねぎ・にんにくを炒め、赤ワイン・トマト缶を加えて20分煮込みボロネーゼを作る',
+    'バター・薄力粉・牛乳でベシャメルソース（ホワイトソース）を作る',
+    'オーブン皿にソース→ラザニアシート→ソース→チーズの順に交互に重ねる（3〜4層）',
+    '180℃のオーブンで30〜35分焼き、表面に焼き色をつけて完成'
+  ]},
+  'ビーフシチュー': { title: 'ビーフシチュー', steps: [
+    '牛すね肉を塊のまま塩・こしょうして薄力粉をまぶし、熱した鍋で表面をしっかり焼く',
+    '玉ねぎ・にんじん・セロリを加えて炒め、赤ワイン300ml・水を加える',
+    'デミグラスソース缶・ローリエを加え、落としぶたをして1.5〜2時間弱火で煮込む',
+    '肉を取り出してほぐし、ソースを漉して再び合わせ、塩で味を調える。マッシュポテトと盛り付ける'
+  ]},
+  'グラタン': { title: 'マカロニグラタン', steps: [
+    'バター・薄力粉・牛乳でベシャメルソースを作る（バター大2・粉大2・牛乳400ml）',
+    '鶏肉・玉ねぎ・マッシュルームを炒め、塩・こしょうして白ワインをふる',
+    'マカロニをゆでて具材とソースを合わせ、グラタン皿に盛る',
+    '溶けるチーズ・パン粉を振り、200℃のオーブンで15〜20分焼く'
+  ]},
+
+  // ─── エスニック・アジア料理 ─────────────────────────────────
+  'カレー': { title: '本格スパイスカレー（チキン）', steps: [
+    '鶏もも肉をヨーグルト・ターメリック・塩でマリネ（30分以上）',
+    '玉ねぎを飴色になるまで炒め（15〜20分）、にんにく・生姜・スパイス（クミン・コリアンダー・ガラムマサラ）を加える',
+    'マリネした鶏肉とトマト缶を加え、水を足して20〜25分煮込む',
+    '塩で味を調え、コリアンダー（香菜）を散らしてナンまたはライスと盛り付ける'
+  ]},
+  'チキンカレー': { title: '本格スパイスカレー（チキン）', steps: [
+    '鶏もも肉をヨーグルト・ターメリック・塩でマリネ（30分以上）',
+    '玉ねぎを飴色になるまで炒め（15〜20分）、にんにく・生姜・スパイス（クミン・コリアンダー・ガラムマサラ）を加える',
+    'マリネした鶏肉とトマト缶を加え、水を足して20〜25分煮込む',
+    '塩で味を調え、コリアンダー（香菜）を散らしてナンまたはライスと盛り付ける'
+  ]},
+  'ガパオ': { title: 'ガパオライス', steps: [
+    'にんにく・赤唐辛子をごま油で炒め、鶏ひき肉を加えて色が変わるまで炒める',
+    'ナンプラー・オイスターソース・砂糖・醤油で味付けし、パプリカ・玉ねぎを加える',
+    'バジルをちぎって加え、火を止めてさっと混ぜる',
+    'ご飯に盛り、目玉焼き（半熟）をのせてライムを添えて完成'
+  ]},
+  'タコス': { title: 'タコス（スパイシービーフ）', steps: [
+    '牛ひき肉をフライパンで炒め、クミン・パプリカ・チリパウダー・塩で味付け',
+    'トルティーヤを温めてフライパンで軽く焼き目をつける',
+    'レタス・トマト（角切り）・アボカド（マッシュ）・チーズ・サルサソースを準備',
+    'トルティーヤに肉・野菜・トッピングをのせ、ライムを搾って食べる'
+  ]},
+
+  // ─── 前菜・おつまみ ──────────────────────────────────────────
+  'チーズ': { title: 'チーズ盛り合わせ ＆ はちみつがけ', steps: [
+    '3種類以上のチーズを選ぶ（例：カマンベール・チェダー・ゴルゴンゾーラ）を冷蔵庫から30分前に出す',
+    '生ハム・ドライフルーツ（いちじく・ぶどう）・ナッツをお皿に盛り付ける',
+    'クラッカーとフランスパン（薄切り）を添える',
+    'ゴルゴンゾーラにはちみつをかけ、フルーティーな赤や甘口白ワインと合わせてどうぞ'
+  ]},
+  '生ハム': { title: '生ハムメロン ＆ ルッコラサラダ', steps: [
+    'メロンを薄切りにして、生ハムを包むように盛り付ける',
+    'ルッコラ・パルミジャーノ（削り）・松の実をお皿に散らす',
+    'レモン汁・EXオリーブオイル・塩・こしょうでさっとドレッシング',
+    'スパークリングワインや辛口白ワインと最高の組み合わせ'
+  ]},
+  'デザート': { title: 'チョコレートムース', steps: [
+    'ダークチョコレート100gを湯煎で溶かし、溶かしバター・卵黄2個・砂糖を混ぜる',
+    '生クリーム200mlを8分立てに泡立て、卵白2個をしっかり泡立てる（メレンゲ）',
+    'チョコレートに生クリーム→メレンゲの順に切り混ぜる（泡を潰さないよう）',
+    'グラスに注いで冷蔵庫で2時間冷やし、甘口赤ワインやポートワインと合わせる'
+  ]},
+  'フォアグラ': { title: 'フォアグラのポワレ', steps: [
+    'フォアグラを1.5cm厚にスライスし、両面に塩・こしょうをふる',
+    '極力熱したフライパン（油なし）でフォアグラを入れ、片面30秒ずつ素早く焼く',
+    '取り出してブリオッシュの上にのせる',
+    '残った脂にコニャック・バルサミコ・蜂蜜を加えてソースにし、かけて完成'
+  ]},
+
+  // ─── デフォルト ──────────────────────────────────────────────
+  'デフォルト': { title: 'ワインに合うおつまみプレート', steps: [
+    'お好みのチーズ（カマンベール・ゴーダ・チェダーなど）を常温に戻す',
+    '生ハム・サラミ・ドライフルーツ（いちじく・ぶどう）をお皿に並べる',
+    'クラッカー・バゲット（薄切りトースト）・ナッツを添える',
+    'はちみつをチーズに少量かけて、選んだワインと一緒にお楽しみください'
+  ]}
+};
+
+// ─── メイン処理 ─────────────────────────────────────────────
+
+// ─── 予算スライダー ────────────────────────────────────────────
+function updateSlider(el) {
+  var val = parseInt(el.value);
+  var max = parseInt(el.max);
+  var pct = ((val - parseInt(el.min)) / (max - parseInt(el.min)) * 100).toFixed(1);
+  el.style.setProperty('--pct', pct + '%');
+  document.getElementById('sliderVal').textContent = val.toLocaleString();
+}
+
+function quickDish(name) {
+  document.getElementById('dishInput').value = name;
+  suggest();
+}
+
+function suggest() {
+  var dish = document.getElementById('dishInput').value.trim();
+  if (!dish) { showInputError('料理名を入力してください'); return; }
+
+  var matched = matchDish(dish);
+  var result  = scoreWines(dish, matched);
+
+  if (!matched && result.length === 0) {
+    showInputError('「' + dish + '」は料理名として認識できませんでした。\nステーキ・パスタ・刺身など、具体的な料理名を入力してください。');
+    return;
+  }
+
+  recordSearch(dish);
+  renderRankingPanel();
+
+  // 全結果を保持してページング
+  _allScored  = result;
+  _allMatched = matched;
+  _allDish    = dish;
+  _shownCount = 3;
+  renderResults(dish, matched, result.slice(0, 3), result.length);
+}
+
+var _allScored  = [];
+var _allMatched = null;
+var _allDish    = '';
+var _shownCount = 3;
+
+function loadMore() {
+  _shownCount += 3;
+  var next = _allScored.slice(0, _shownCount);
+  renderResults(_allDish, _allMatched, next, _allScored.length);
+  // 追加されたカードだけアニメーション
+  setTimeout(function() {
+    document.querySelectorAll('.score-bar-fill').forEach(function(el) {
+      el.style.width = el.getAttribute('data-pct');
+    });
+  }, 80);
+}
+
+function showInputError(msg) {
+  var input = document.getElementById('dishInput');
+  input.style.borderColor = '#ef4444';
+  input.style.boxShadow   = '0 0 0 3px rgba(239,68,68,0.18)';
+  setTimeout(function() {
+    input.style.borderColor = '';
+    input.style.boxShadow   = '';
+  }, 2000);
+
+  var errEl = document.getElementById('inputError');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.id = 'inputError';
+    errEl.style.cssText = [
+      'margin-top:10px','padding:12px 16px','border-radius:10px',
+      'background:rgba(239,68,68,0.1)','border:1px solid rgba(239,68,68,0.35)',
+      'color:#fca5a5','font-size:13px','line-height:1.6','white-space:pre-line'
+    ].join(';');
+    input.parentNode.parentNode.appendChild(errEl);
+  }
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+  setTimeout(function() { if (errEl) errEl.style.display = 'none'; }, 4000);
+}
+
+function matchDish(dish) {
+  var d = dish.replace(/[\s　]/g, '');
+
+  // パス1: 完全包含マッチ（既存キーが入力に含まれる、または逆）
+  for (var i = 0; i < DISH_DICT.length; i++) {
+    var entry = DISH_DICT[i];
+    for (var j = 0; j < entry.keys.length; j++) {
+      var key = entry.keys[j];
+      if (d.indexOf(key) !== -1 || key.indexOf(d) !== -1) {
+        return entry;
+      }
+    }
+  }
+
+  // パス2: 3文字以上の任意部分文字列マッチ（入力の部分列がキーに含まれる）
+  for (var i = 0; i < DISH_DICT.length; i++) {
+    var entry = DISH_DICT[i];
+    for (var j = 0; j < entry.keys.length; j++) {
+      var key = entry.keys[j];
+      // 入力の3文字部分がキーに含まれるか
+      for (var s = 0; s <= d.length - 3; s++) {
+        if (key.indexOf(d.substring(s, s + 3)) !== -1) return entry;
+      }
+      // キーの3文字部分が入力に含まれるか
+      for (var s = 0; s <= key.length - 3; s++) {
+        if (d.indexOf(key.substring(s, s + 3)) !== -1) return entry;
+      }
+    }
+  }
+
+  return null;
+}
+
+function scoreWines(dish, matched) {
+  var priceMax    = parseInt(document.getElementById('priceSlider').value) || 6000;
+  var colorFilter = document.getElementById('colorFilter').value;
+
+  var scored = WINE_DATA
+    .filter(function(w) {
+      var p   = parseInt(w['参考価格円税込']) || 0;
+      var cat = w['カテゴリ'] || '';
+      var col = w['色'] || '';
+      if (p > priceMax) return false;
+      if (colorFilter !== 'all') {
+        if (colorFilter === 'スパークリング') { if (cat !== 'スパークリング') return false; }
+        else { if (col !== colorFilter || cat === 'スパークリング') return false; }
+      }
+      return true;
+    })
+    .map(function(w) {
+      var score = 0;
+      var kw    = (w['ペアリングキーワード'] || '') + ' ' + (w['料理ペアリング'] || '');
+      var col   = w['色'] || '';
+      var cat   = w['カテゴリ'] || '';
+      var body  = w['ボディ'] || '';
+
+      // 「日常」「カジュアル」キーワードを色ベースのタグとして補完
+      var kwExpanded = kw;
+      if (kw.indexOf('日常') !== -1 || kw.indexOf('カジュアル') !== -1) {
+        if (col === '赤') kwExpanded += ' 肉料理 煮込み 和食';
+        if (col === '白') kwExpanded += ' 魚料理 鶏料理 和食';
+        if (col === 'ロゼ') kwExpanded += ' 肉料理 魚料理';
+        if (cat === 'スパークリング') kwExpanded += ' 前菜 チーズ';
+      }
+
+      // キーワード・ボディ・色マッチ
+      if (matched) {
+        matched.tags.forEach(function(t) { if (kwExpanded.indexOf(t) !== -1) score += 10; });
+        if (matched.body  && body === matched.body)  score += 5;
+        if (matched.color && col  === matched.color) score += 8;
+      }
+      if (kwExpanded.indexOf(dish) !== -1) score += 15;
+
+      // 価格帯ボーナス
+      var p = parseInt(w['参考価格円税込']) || 0;
+      if (p >= 800 && p <= 2000) score += 2;
+      // 750ml以外は軽微なペナルティ（-3→-1に緩和してペットボトルも表示されやすく）
+      if (w['容量ml'] !== '750') score -= 1;
+
+      return { wine: w, score: score };
+    })
+    .filter(function(x) { return x.score >= 8; })
+    .sort(function(a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return parseInt(a.wine['参考価格円税込']) - parseInt(b.wine['参考価格円税込']);
+    });
+
+  // スコア正規化（最高スコアを基準に%化）
+  var maxScore = scored.length > 0 ? scored[0].score : 1;
+  scored.forEach(function(x) {
+    x.pct = Math.min(99, Math.round((x.score / Math.max(maxScore, 30)) * 100));
+  });
+
+  return scored;
+}
+
+function getTagClass(cat, color) {
+  if (cat === 'スパークリング') return 'tag-spark';
+  if (color === '赤') return 'tag-red';
+  if (color === '白') return 'tag-white';
+  if (color === 'ロゼ') return 'tag-rose';
+  return 'tag-other';
+}
+
+var RANK_LABELS = ['', 'BEST MATCH', '2ND PICK', '3RD PICK', '4TH', '5TH', '6TH', '7TH', '8TH', '9TH'];
+var RANK_ICONS  = ['', '🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
+
+// ─── localStorage 検索記録 ────────────────────────────────────
+var LS_COUNTS = 'wbh_search_counts';
+var LS_RECENT = 'wbh_recent_searches';
+
+function recordSearch(dish) {
+  try {
+    var counts = JSON.parse(localStorage.getItem(LS_COUNTS) || '{}');
+    counts[dish] = (counts[dish] || 0) + 1;
+    localStorage.setItem(LS_COUNTS, JSON.stringify(counts));
+
+    var recent = JSON.parse(localStorage.getItem(LS_RECENT) || '[]');
+    recent = recent.filter(function(r) { return r !== dish; });
+    recent.unshift(dish);
+    localStorage.setItem(LS_RECENT, JSON.stringify(recent.slice(0, 10)));
+  } catch(e) {}
+}
+
+function renderRankingPanel() {
+  try {
+    var counts = JSON.parse(localStorage.getItem(LS_COUNTS) || '{}');
+    var recent = JSON.parse(localStorage.getItem(LS_RECENT) || '[]');
+    var ranking = Object.keys(counts)
+      .map(function(k) { return { dish: k, count: counts[k] }; })
+      .sort(function(a, b) { return b.count - a.count; })
+      .slice(0, 5);
+
+    var panel = document.getElementById('rankingPanel');
+    if (ranking.length === 0 && recent.length === 0) { panel.style.display = 'none'; return; }
+
+    var numCls = ['','rank-num-1','rank-num-2','rank-num-3','rank-num-4','rank-num-5'];
+    var rankHtml = ranking.map(function(r, i) {
+      return '<div class="ranking-item" onclick="quickDish(\'' + r.dish.replace(/'/g,"&#39;") + '\')">' +
+        '<span class="ranking-num ' + numCls[i+1] + '">' + (i+1) + '</span>' +
+        '<span class="ranking-dish">' + r.dish + '</span>' +
+        '<span class="ranking-count">' + r.count + '回</span>' +
+      '</div>';
+    }).join('');
+
+    var recentHtml = recent.slice(0, 8).map(function(r) {
+      return '<span class="recent-chip" onclick="quickDish(\'' + r.replace(/'/g,"&#39;") + '\')">' + r + '</span>';
+    }).join('');
+
+    document.getElementById('rankingList').innerHTML = rankHtml || '<div style="color:var(--muted);font-size:12px;">まだ検索記録がありません</div>';
+    document.getElementById('recentList').innerHTML  = recentHtml;
+    panel.style.display = 'grid';
+  } catch(e) {}
+}
+
+// ─── 音声読み上げ ────────────────────────────────────────────────
+var _voiceMuted = false;
+
+function toggleVoice() {
+  _voiceMuted = !_voiceMuted;
+  var btn = document.getElementById('voiceToggleBtn');
+  if (btn) btn.textContent = _voiceMuted ? '🔇 音声OFF' : '🔊 音声ON';
+  if (_voiceMuted) window.speechSynthesis.cancel();
+}
+
+function speakText(text) {
+  if (_voiceMuted || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ja-JP';
+  utter.rate = 0.92;
+  utter.pitch = 1.0;
+
+  // 日本語音声を優先して選択
+  var voices = window.speechSynthesis.getVoices();
+  var jaVoice = voices.find(function(v) { return v.lang === 'ja-JP' && v.localService; })
+             || voices.find(function(v) { return v.lang === 'ja-JP'; });
+  if (jaVoice) utter.voice = jaVoice;
+
+  window.speechSynthesis.speak(utter);
+}
+
+function speakResultComment(dish, scored) {
+  if (!dish || !scored || scored.length === 0) return;
+  var top = scored[0].wine;
+  var wineName = top['商品名略称'] || '';
+  var color = top['色'] || '';
+  var colorWord = color === '赤' ? '赤ワイン' : color === '白' ? '白ワイン' : color === 'ロゼ' ? 'ロゼワイン' : 'ワイン';
+
+  var phrases = [
+    dish + 'には、' + colorWord + 'の' + wineName + 'がよく合いますよ。',
+    'いらっしゃいませ。' + dish + 'でしたら、' + wineName + 'をおすすめします。',
+    dish + 'のお供に、' + wineName + 'はいかがでしょうか。',
+  ];
+  var text = phrases[Math.floor(Math.random() * phrases.length)];
+  // 音声ロード待ちに対応
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.addEventListener('voiceschanged', function onV() {
+      window.speechSynthesis.removeEventListener('voiceschanged', onV);
+      speakText(text);
+    });
+  } else {
+    speakText(text);
+  }
+}
+
+function setSommelierImg(mode) {
+  var img = document.getElementById('sommelierImg');
+  if (!img) return;
+  var src = mode === 'result'
+    ? 'sommelier-result.png'
+    : 'sommelier-main.png';
+  img.style.opacity = '0';
+  setTimeout(function() { img.src = src; img.style.opacity = '1'; }, 300);
+}
+
+function renderResults(dish, matched, scored, totalCount) {
+  setSommelierImg('result');
+  var resultsEl = document.getElementById('results');
+  var headerEl  = document.getElementById('resultHeader');
+  var cardsEl   = document.getElementById('wineCards');
+  var recipeEl  = document.getElementById('recipeSection');
+
+  resultsEl.classList.remove('visible');
+
+  if (scored.length === 0) {
+    headerEl.innerHTML =
+      '<div class="result-header">' +
+        '<div class="result-overline">結果</div>' +
+        '<div class="result-dish-title">「<em>' + dish + '</em>」</div>' +
+        '<div class="result-count">条件に合うワインが見つかりませんでした。予算や色のフィルターを変えてみてください。</div>' +
+      '</div>';
+    cardsEl.innerHTML = '';
+    recipeEl.innerHTML = '';
+    resultsEl.classList.add('visible');
+    return;
+  }
+
+  // 最初のページ表示時のみ読み上げ（loadMoreでは再度読まない）
+  if (scored.length <= 3) speakResultComment(dish, scored);
+
+  var total = (typeof WINE_DATA !== 'undefined') ? WINE_DATA.length : '';
+  headerEl.innerHTML =
+    '<div class="result-header">' +
+      '<div class="result-overline">Wine Navigator Recommends</div>' +
+      '<div class="result-dish-title">「<em>' + dish + '</em>」に合うワイン</div>' +
+      '<div class="result-count">' + total + ' 商品から ' + (totalCount || scored.length) + ' 本を厳選 — ' + scored.length + ' 本表示中</div>' +
+    '</div>';
+
+  var html = '';
+  scored.forEach(function(item, i) {
+    var w      = item.wine;
+    var pct    = item.pct;
+    var cat    = w['カテゴリ'] || '';
+    var color  = w['色'] || '';
+    var tagCls = getTagClass(cat, color);
+    var price  = parseInt(w['参考価格円税込']) || 0;
+    var note   = w['備考'] ? '<span class="tag tag-other">' + w['備考'] + '</span>' : '';
+    var c      = buildComment(w, matched);
+    var svg    = bottleSVG(cat, color);
+
+    html +=
+      '<div class="wine-card wine-card-' + (i+1) + '">' +
+        '<div class="wine-bottle-col">' +
+          svg +
+          '<div class="rank-badge rank-' + (i+1) + '">' + RANK_LABELS[i+1] + '</div>' +
+        '</div>' +
+        '<div class="wine-info">' +
+          '<div class="wine-name">' + RANK_ICONS[i+1] + ' ' + w['商品名略称'] + '</div>' +
+          '<div class="wine-official">' + w['正式商品名'] + '</div>' +
+          '<div class="score-bar-wrap">' +
+            '<span class="score-bar-label">Pairing Score</span>' +
+            '<div class="score-bar-track"><div class="score-bar-fill" style="width:0%" data-pct="' + pct + '%"></div></div>' +
+            '<span class="score-bar-pct">' + pct + '%</span>' +
+          '</div>' +
+          '<div class="wine-tags">' +
+            '<span class="tag ' + tagCls + '">' + cat + '</span>' +
+            '<span class="tag tag-other">🌍 ' + (w['産地国'] || '') + (w['産地地域'] ? ' · ' + w['産地地域'] : '') + '</span>' +
+            '<span class="tag tag-other">🍇 ' + (w['品種'] || '') + '</span>' +
+            '<span class="tag tag-other">' + (w['辛口甘口'] || '') + ' · ' + (w['ボディ'] || '') + 'ボディ</span>' +
+            note +
+          '</div>' +
+          '<div class="sommelier-comment">' +
+            '<span class="sommelier-icon">🍷</span>' + c.comment +
+            '<div style="margin-top:8px;font-size:11px;color:#7c6fac;font-weight:400;">' + c.info + '</div>' +
+          '</div>' +
+          '<div class="pairing-why">' +
+            '<div class="pairing-why-title">' + c.why.icon + '  なぜこの料理に合うのか</div>' +
+            c.why.why +
+          '</div>' +
+        '</div>' +
+        '<div class="wine-price-col">' +
+          '<div class="price-label">参考価格</div>' +
+          '<div class="price-value">' + price.toLocaleString() + '<span class="price-yen">円</span></div>' +
+          '<div class="price-vol">' + (w['容量ml'] || '') + 'ml</div>' +
+        '</div>' +
+      '</div>';
+  });
+  // もっと見るボタン
+  var remaining = (totalCount || scored.length) - scored.length;
+  if (remaining > 0) {
+    html += '<div class="load-more-wrap">' +
+      '<button class="btn-load-more" onclick="loadMore()">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>' +
+        'もっと見る（3本ずつ追加 / あと ' + remaining + ' 本）' +
+      '</button>' +
+    '</div>';
+  }
+  cardsEl.innerHTML = html;
+
+  // スコアバーアニメーション（描画後に幅をセット）
+  setTimeout(function() {
+    document.querySelectorAll('.score-bar-fill').forEach(function(el) {
+      el.style.width = el.getAttribute('data-pct');
+    });
+  }, 80);
+
+  var recipeKey = 'デフォルト';
+  if (matched) {
+    matched.keys.forEach(function(k) { if (RECIPES[k]) recipeKey = k; });
+  }
+  var recipe    = RECIPES[recipeKey] || RECIPES['デフォルト'];
+  var stepsHtml = recipe.steps.map(function(s, idx) {
+    return '<div class="recipe-step"><div class="step-num">' + (idx+1) + '</div><div class="step-text">' + s + '</div></div>';
+  }).join('');
+  var wineLabel = scored[0] ? scored[0].wine['商品名略称'] : '';
+  recipeEl.innerHTML =
+    '<div class="recipe-wrap">' +
+      '<div class="recipe-overline">🍳 Pairing Recipe</div>' +
+      '<div class="recipe-title">' + recipe.title + '</div>' +
+      '<div style="font-size:12px;color:#6b9980;margin-bottom:16px;">— ' + wineLabel + ' に合わせて</div>' +
+      '<div class="recipe-steps">' + stepsHtml + '</div>' +
+    '</div>';
+
+  resultsEl.classList.add('visible');
+  setTimeout(function() {
+    window.scrollTo({ top: resultsEl.offsetTop - 80, behavior: 'smooth' });
+  }, 60);
+}
+
+// ─── モード切替 ────────────────────────────────────────────────
+var currentMode = 'dish';
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('tabDish').classList.toggle('active', mode === 'dish');
+  document.getElementById('tabWine').classList.toggle('active', mode === 'wine');
+  document.getElementById('dishSearchPanel').classList.toggle('hidden', mode === 'wine');
+  document.getElementById('wineSearchPanel').classList.toggle('visible', mode === 'wine');
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('resultHeader').innerHTML = '';
+  document.getElementById('wineCards').innerHTML = '';
+  document.getElementById('recipeSection').innerHTML = '';
+}
+
+// ─── ワイン名オートコンプリート ────────────────────────────────
+var selectedWine = null;
+var dropdownIndex = -1;
+
+function initWineQuickList() {
+  var picks = [];
+  var seen  = {};
+  var cats  = ['スパークリング','赤','白','ロゼ'];
+  cats.forEach(function(c) {
+    for (var i = 0; i < WINE_DATA.length; i++) {
+      var w = WINE_DATA[i];
+      var key = (w['色'] === c || w['カテゴリ'] === c);
+      if (key && !seen[w['商品名略称']]) {
+        seen[w['商品名略称']] = true;
+        picks.push(w);
+        break;
+      }
+    }
+  });
+  var emojis = { 'スパークリング':'🥂', '赤':'🍷', '白':'🥛', 'ロゼ':'🌸' };
+  var html = '';
+  picks.forEach(function(w) {
+    var cat = w['カテゴリ'] === 'スパークリング' ? 'スパークリング' : w['色'];
+    var em  = emojis[cat] || '🍾';
+    html += '<span class="quick-dish" onclick="quickWine(\'' + w['商品名略称'].replace(/'/g,"&#39;") + '\')">' + em + ' ' + w['商品名略称'] + '</span>';
+  });
+  // 人気ワインをいくつか追加
+  var extras = [];
+  WINE_DATA.forEach(function(w) {
+    if (!seen[w['商品名略称']]) { extras.push(w); seen[w['商品名略称']] = true; }
+  });
+  extras.slice(0, 8).forEach(function(w) {
+    var cat = w['カテゴリ'] === 'スパークリング' ? 'スパークリング' : w['色'];
+    var em  = { 'スパークリング':'🥂', '赤':'🍷', '白':'🥛', 'ロゼ':'🌸' }[cat] || '🍾';
+    html += '<span class="quick-dish" onclick="quickWine(\'' + w['商品名略称'].replace(/'/g,"&#39;") + '\')">' + em + ' ' + w['商品名略称'] + '</span>';
+  });
+  document.getElementById('wineQuickList').innerHTML = html;
+}
+
+function quickWine(name) {
+  document.getElementById('wineInput').value = name;
+  selectedWine = findWineByName(name);
+  closeDropdown();
+  suggestByWine();
+}
+
+function findWineByName(q) {
+  if (!q) return null;
+  var norm = q.replace(/[\s　]/g, '').toLowerCase();
+  // 完全一致 → 部分一致
+  for (var i = 0; i < WINE_DATA.length; i++) {
+    var w = WINE_DATA[i];
+    var n1 = (w['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+    var n2 = (w['正式商品名'] || '').replace(/[\s　]/g,'').toLowerCase();
+    if (n1 === norm || n2 === norm) return w;
+  }
+  for (var i = 0; i < WINE_DATA.length; i++) {
+    var w = WINE_DATA[i];
+    var n1 = (w['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+    var n2 = (w['正式商品名'] || '').replace(/[\s　]/g,'').toLowerCase();
+    if (n1.indexOf(norm) !== -1 || norm.indexOf(n1) !== -1 ||
+        n2.indexOf(norm) !== -1 || norm.indexOf(n2) !== -1) return w;
+  }
+  // 3文字部分一致
+  if (norm.length >= 3) {
+    for (var i = 0; i < WINE_DATA.length; i++) {
+      var w  = WINE_DATA[i];
+      var n1 = (w['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+      for (var s = 0; s <= norm.length - 3; s++) {
+        if (n1.indexOf(norm.substring(s, s+3)) !== -1) return w;
+      }
+    }
+  }
+  return null;
+}
+
+function searchWineDropdown(q) {
+  if (!q || q.length < 1) { closeDropdown(); return; }
+  var norm = q.replace(/[\s　]/g,'').toLowerCase();
+  var results = [];
+  WINE_DATA.forEach(function(w) {
+    var n1 = (w['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+    var n2 = (w['正式商品名'] || '').replace(/[\s　]/g,'').toLowerCase();
+    if (n1.indexOf(norm) !== -1 || n2.indexOf(norm) !== -1) {
+      results.push(w);
+    }
+  });
+  // 3文字フォールバック
+  if (results.length === 0 && norm.length >= 3) {
+    WINE_DATA.forEach(function(w) {
+      var n1 = (w['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+      for (var s = 0; s <= norm.length - 3; s++) {
+        if (n1.indexOf(norm.substring(s, s+3)) !== -1) { results.push(w); break; }
+      }
+    });
+  }
+  var dd = document.getElementById('wineDropdown');
+  if (results.length === 0) { closeDropdown(); return; }
+  var catEmoji = { 'スパークリング':'🥂', '赤':'🍷', '白':'🥛', 'ロゼ':'🌸' };
+  dd.innerHTML = results.slice(0, 12).map(function(w, idx) {
+    var cat = w['カテゴリ'] === 'スパークリング' ? 'スパークリング' : w['色'];
+    var em  = catEmoji[cat] || '🍾';
+    var price = parseInt(w['参考価格円税込']) || 0;
+    return '<div class="wine-option" data-idx="' + idx + '" onclick="selectWineOption(' + idx + ')">' +
+      '<span>' + em + '</span>' +
+      '<span class="wine-option-name">' + w['商品名略称'] + '</span>' +
+      '<span class="wine-option-meta">' + (w['産地国'] || '') + ' ¥' + price.toLocaleString() + '</span>' +
+    '</div>';
+  }).join('');
+  dd._results = results.slice(0, 12);
+  dropdownIndex = -1;
+  dd.classList.add('open');
+}
+
+function selectWineOption(idx) {
+  var dd = document.getElementById('wineDropdown');
+  var w  = dd._results[idx];
+  selectedWine = w;
+  document.getElementById('wineInput').value = w['商品名略称'];
+  closeDropdown();
+  suggestByWine();
+}
+
+function closeDropdown() {
+  document.getElementById('wineDropdown').classList.remove('open');
+}
+
+// ─── ワインに合う料理を提案 ─────────────────────────────────────
+function matchDishesByWine(wine) {
+  var kw   = ((wine['ペアリングキーワード'] || '') + ' ' + (wine['料理ペアリング'] || '')).toLowerCase();
+  var col  = wine['色'] || '';
+  var cat  = wine['カテゴリ'] || '';
+  var body = wine['ボディ'] || '';
+
+  var scored = DISH_DICT.map(function(entry) {
+    var score = 0;
+    // タグがキーワードに含まれる
+    entry.tags.forEach(function(tag) {
+      if (kw.indexOf(tag) !== -1) score += 10;
+    });
+    // キーがキーワードに含まれる
+    entry.keys.forEach(function(key) {
+      if (kw.indexOf(key) !== -1) score += 15;
+    });
+    // 色・ボディ一致
+    if (entry.color && entry.color === col) score += 5;
+    if (entry.body  && entry.body  === body) score += 3;
+    // スパークリング用
+    if (cat === 'スパークリング' && (kw.indexOf('スパークリング') !== -1 || kw.indexOf('泡') !== -1)) score += 5;
+    return { entry: entry, score: score };
+  });
+
+  return scored
+    .filter(function(x) { return x.score >= 10; })
+    .sort(function(a, b) { return b.score - a.score; })
+    .slice(0, 3)
+    .map(function(x) { return x.entry; });
+}
+
+var DISH_EMOJIS = {
+  '肉料理':'🥩','魚料理':'🐟','鶏料理':'🍗','前菜':'🥗','デザート':'🍰',
+  'パスタ':'🍝','ピザ':'🍕','和食':'🍱','エスニック':'🌶️','スパイシー':'🌶️',
+  'アジア料理':'🥢','チーズ':'🧀','野菜料理':'🥦','揚げ物':'🍟','バーベキュー':'🔥',
+  'シーフード':'🦐','煮込み':'🍲','グリル':'🥩','鍋料理':'🍲','卵料理':'🥚'
+};
+
+function getDishEmoji(tags) {
+  for (var i = 0; i < tags.length; i++) {
+    if (DISH_EMOJIS[tags[i]]) return DISH_EMOJIS[tags[i]];
+  }
+  return '🍽️';
+}
+
+function suggestByWine() {
+  var input = document.getElementById('wineInput').value.trim();
+  if (!input) { showWineInputError('ワイン名を入力してください'); return; }
+
+  var wine = selectedWine || findWineByName(input);
+  if (!wine) { showWineInputError('「' + input + '」はワインとして認識できませんでした。\nリストから選ぶか、別の名前でお試しください。'); return; }
+  selectedWine = wine;
+
+  var dishes = matchDishesByWine(wine);
+  renderWineReverseResults(wine, dishes);
+}
+
+function showWineInputError(msg) {
+  var input = document.getElementById('wineInput');
+  input.style.borderColor = '#ef4444';
+  input.style.boxShadow   = '0 0 0 3px rgba(239,68,68,0.18)';
+  setTimeout(function() { input.style.borderColor=''; input.style.boxShadow=''; }, 2000);
+  var errEl = document.getElementById('wineInputError');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.id = 'wineInputError';
+    errEl.style.cssText = 'margin-top:10px;padding:12px 16px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;font-size:13px;line-height:1.6;white-space:pre-line';
+    input.parentNode.parentNode.parentNode.appendChild(errEl);
+  }
+  errEl.textContent = msg; errEl.style.display = 'block';
+  setTimeout(function() { errEl.style.display='none'; }, 4000);
+}
+
+function renderWineReverseResults(wine, dishes) {
+  setSommelierImg('result');
+  var resultsEl = document.getElementById('results');
+  var headerEl  = document.getElementById('resultHeader');
+  var cardsEl   = document.getElementById('wineCards');
+  var recipeEl  = document.getElementById('recipeSection');
+  resultsEl.classList.remove('visible');
+
+  var cat   = wine['カテゴリ'] || '';
+  var color = wine['色'] || '';
+  var price = parseInt(wine['参考価格円税込']) || 0;
+  var svg   = bottleSVG(cat, color);
+
+  // ヘッダー：選択ワイン表示
+  headerEl.innerHTML =
+    '<div class="result-header">' +
+      '<div class="result-overline">Wine Reverse Pairing</div>' +
+      '<div class="result-dish-title">「<em>' + wine['商品名略称'] + '</em>」に合うお料理</div>' +
+      '<div class="result-count">このワインの特徴から ' + dishes.length + ' 品のお料理を提案します</div>' +
+    '</div>' +
+    '<div class="selected-wine-banner">' +
+      '<div class="selected-wine-banner-bottle">' + svg + '</div>' +
+      '<div class="selected-wine-banner-info">' +
+        '<div class="selected-wine-banner-label">Selected Wine</div>' +
+        '<div class="selected-wine-banner-name">' + wine['商品名略称'] + '</div>' +
+        '<div class="selected-wine-banner-meta">' +
+          (wine['産地国'] || '') + (wine['産地地域'] ? ' · ' + wine['産地地域'] : '') +
+          ' ／ ' + (wine['品種'] || '') +
+          ' ／ ' + (wine['辛口甘口'] || '') + ' · ' + (wine['ボディ'] || '') + 'ボディ' +
+          ' ／ ¥' + price.toLocaleString() +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  // 料理カード
+  if (dishes.length === 0) {
+    cardsEl.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:24px 0;">このワインに合う料理の組み合わせが見つかりませんでした。</div>';
+    recipeEl.innerHTML = '';
+    resultsEl.classList.add('visible');
+    return;
+  }
+
+  var rankLabels = ['BEST MATCH','2ND PICK','3RD PICK'];
+  var html = '<div class="dish-cards">';
+  dishes.forEach(function(entry, i) {
+    var em      = getDishEmoji(entry.tags);
+    var keyName = entry.keys[0];
+    var recipeKey = 'デフォルト';
+    entry.keys.forEach(function(k) { if (RECIPES[k]) recipeKey = k; });
+    var recipe    = RECIPES[recipeKey] || RECIPES['デフォルト'];
+    var stepsHtml = recipe.steps.map(function(s, idx) {
+      return '<div class="recipe-step"><div class="step-num">' + (idx+1) + '</div><div class="step-text">' + s + '</div></div>';
+    }).join('');
+
+    html +=
+      '<div class="dish-card dish-card-' + (i+1) + '">' +
+        '<div class="dish-emoji">' + em + '<div style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--gold);margin-top:6px;text-align:center;">' + rankLabels[i] + '</div></div>' +
+        '<div class="dish-card-body">' +
+          '<div class="dish-card-name">' + keyName + '</div>' +
+          '<div class="dish-card-reason">🍷 ' + entry.reason + '</div>' +
+          '<div class="wine-tags" style="margin-bottom:12px;">' +
+            entry.tags.map(function(t) { return '<span class="tag tag-other">' + t + '</span>'; }).join('') +
+          '</div>' +
+          '<button class="dish-card-recipe-btn" onclick="toggleRecipe(this)">' +
+            '📖 レシピを見る' +
+          '</button>' +
+          '<div class="dish-recipe-inline">' +
+            '<div style="font-size:10px;font-weight:700;letter-spacing:0.15em;color:var(--gold);margin-bottom:12px;">🍳 ' + recipe.title + '</div>' +
+            '<div class="recipe-steps">' + stepsHtml + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  cardsEl.innerHTML = html;
+  recipeEl.innerHTML = '';
+
+  resultsEl.classList.add('visible');
+  setTimeout(function() {
+    window.scrollTo({ top: resultsEl.offsetTop - 80, behavior: 'smooth' });
+  }, 60);
+}
+
+function toggleRecipe(btn) {
+  var panel = btn.nextElementSibling;
+  var open  = panel.classList.toggle('open');
+  btn.textContent = open ? '📖 レシピを閉じる' : '📖 レシピを見る';
+}
+
+// ─── DOMContentLoaded ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('dishInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') suggest();
+  });
+
+  // 入力欄をクリアしたら元の画像に戻して読み上げも止める
+  document.getElementById('dishInput').addEventListener('input', function() {
+    if (this.value === '') {
+      setSommelierImg('default');
+      window.speechSynthesis && window.speechSynthesis.cancel();
+    }
+  });
+
+  // スライダー初期化
+  var slider = document.getElementById('priceSlider');
+  if (slider) updateSlider(slider);
+
+  // ランキングパネル初期表示
+  renderRankingPanel();
+
+  // ワイン入力オートコンプリート
+  var wineInput = document.getElementById('wineInput');
+  wineInput.addEventListener('input', function() {
+    selectedWine = null;
+    searchWineDropdown(this.value);
+  });
+  wineInput.addEventListener('keydown', function(e) {
+    var dd   = document.getElementById('wineDropdown');
+    var opts = dd.querySelectorAll('.wine-option');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      dropdownIndex = Math.min(dropdownIndex + 1, opts.length - 1);
+      opts.forEach(function(o, i) { o.classList.toggle('selected', i === dropdownIndex); });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      dropdownIndex = Math.max(dropdownIndex - 1, -1);
+      opts.forEach(function(o, i) { o.classList.toggle('selected', i === dropdownIndex); });
+    } else if (e.key === 'Enter') {
+      if (dropdownIndex >= 0 && dd._results) {
+        selectWineOption(dropdownIndex);
+      } else {
+        suggestByWine();
+      }
+    } else if (e.key === 'Escape') {
+      closeDropdown();
+    }
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.wine-input-wrap')) closeDropdown();
+  });
+
+  // ワインクイックリスト初期化
+  if (typeof WINE_DATA !== 'undefined') initWineQuickList();
+});
+</script>
+</body>
+</html>
