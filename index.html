@@ -520,27 +520,6 @@ input[type=range]::-webkit-slider-thumb {
 </style>
 </head>
 <body>
-<div id="pwGate" style="position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;">
-  <div style="width:100%;max-width:360px;padding:0 24px;text-align:center;">
-    <div style="font-size:36px;margin-bottom:8px;">🍷</div>
-    <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px;">AIペアリングナビ</div>
-    <div style="font-size:12px;color:#999;margin-bottom:32px;">スタッフ・関係者専用</div>
-    <input id="pwInput" type="password" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')checkPw()" style="width:100%;height:48px;padding:0 16px;border:1px solid #e8e8e8;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;text-align:center;letter-spacing:0.15em;border-radius:4px;"/>
-    <div id="pwError" style="height:20px;margin-top:8px;font-size:12px;color:#c0392b;"></div>
-    <button onclick="checkPw()" style="margin-top:8px;width:100%;height:48px;background:#8B1A2C;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px;">ENTER</button>
-  </div>
-</div>
-<script>
-(function(){
-  var PW='ilovewine', SK='wbh_auth';
-  if(sessionStorage.getItem(SK)==='1'){document.getElementById('pwGate').style.display='none';}
-  window.checkPw=function(){
-    var v=document.getElementById('pwInput').value;
-    if(v===PW){sessionStorage.setItem(SK,'1');var g=document.getElementById('pwGate');g.style.transition='opacity 0.3s';g.style.opacity='0';setTimeout(function(){g.style.display='none';},300);}
-    else{var e=document.getElementById('pwError');e.textContent='パスワードが違います。管理者にお問い合わせください。';document.getElementById('pwInput').value='';document.getElementById('pwInput').focus();setTimeout(function(){e.textContent='';},3000);}
-  };
-})();
-</script>
 
 </script>
 
@@ -559,7 +538,7 @@ input[type=range]::-webkit-slider-thumb {
   <div class="hero-left">
     <div class="hero-eyebrow">
       <span class="hero-eyebrow-dot"></span>
-      AI WINE NAVIGATOR
+      AI PAIRING NAVI
     </div>
     <h1 class="hero-heading">今夜の食卓に、<br><em>ぴったりの一本</em>を。</h1>
     <p class="hero-sub">料理名を入力するだけで、最適な一本を厳選してご提案します。なぜ合うのかもわかりやすく解説。</p>
@@ -2902,7 +2881,7 @@ function renderWineReverseResults(wine, dishes) {
   // ヘッダー：選択ワイン表示
   headerEl.innerHTML =
     '<div class="result-header">' +
-      '<div class="result-overline">Wine Reverse Pairing</div>' +
+      '<div class="result-overline">Pairing Navi</div>' +
       '<div class="result-dish-title">「<em>' + wine['商品名略称'] + '</em>」に合うお料理</div>' +
       '<div class="result-count">このワインの特徴から ' + dishes.length + ' 品のお料理を提案します</div>' +
     '</div>' +
