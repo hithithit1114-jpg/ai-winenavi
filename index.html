@@ -211,26 +211,49 @@ body {
 }
 .default-dish-btn:hover { border-color: #8B1A2C; color: #8B1A2C; }
 
-.dish-input {
-  flex: 1;
-  height: 48px; padding: 0 76px 0 16px;
-  border: 1px solid #e8e8e8; background: #fff;
-  color: #111; font-size: 15px; font-family: inherit;
-  outline: none; transition: border-color 0.15s;
+/* ── 50音キーボード ── */
+.kana-ui { margin-bottom: 12px; }
+.kana-display-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.kana-display {
+  flex: 1; min-height: 46px; padding: 0 16px;
+  border: 2px solid #e8e8e8; border-radius: 6px;
+  font-size: 17px; display: flex; align-items: center;
+  background: #fff; transition: border-color 0.15s;
 }
-.dish-input::placeholder { color: #bbb; }
-.dish-input:focus { border-color: #111; }
-.mic-btn {
-  position: absolute; right: 0; top: 0; bottom: 0;
-  width: 72px; border: none; border-left: 1px solid #e8e8e8; background: #fafafa;
-  color: #888; cursor: pointer; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 2px;
-  transition: all 0.15s;
+.kana-display.has-query { border-color: #8B1A2C; font-weight: 600; color: #111; }
+.kana-display.placeholder { color: #bbb; font-size: 13px; }
+.kana-bs {
+  min-width: 52px; height: 46px; border: 1px solid #e8e8e8;
+  border-radius: 6px; font-size: 20px; background: #f5f5f5;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
-.mic-label { font-size: 9px; font-weight: 600; letter-spacing: 0.05em; }
-.mic-btn:hover { background: #f0f0f0; color: #8B1A2C; }
-.mic-btn.recording { background: #fff0f2; color: #8B1A2C; border-left-color: #8B1A2C; animation: mic-pulse 0.7s infinite alternate; }
-@keyframes mic-pulse { from { opacity: 1; } to { opacity: 0.4; } }
+.kana-clear {
+  min-width: 52px; height: 46px; border: 1px solid #e8e8e8;
+  border-radius: 6px; font-size: 12px; font-weight: 700;
+  background: #f5f5f5; cursor: pointer; color: #888; white-space: nowrap; padding: 0 10px;
+}
+.kana-candidates {
+  display: flex; flex-wrap: wrap; gap: 6px; min-height: 0; margin-bottom: 10px;
+}
+.kana-candidate {
+  padding: 7px 16px; border: 1.5px solid #8B1A2C; border-radius: 20px;
+  font-size: 14px; font-family: inherit; background: #fff; color: #8B1A2C;
+  cursor: pointer; white-space: nowrap; transition: background 0.12s, color 0.12s;
+}
+.kana-candidate:active, .kana-candidate:hover { background: #8B1A2C; color: #fff; }
+.kana-no-match { color: #bbb; font-size: 13px; padding: 4px 0; }
+.kana-keyboard {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
+}
+.kana-key {
+  height: 46px; border: 1px solid #e8e8e8; border-radius: 6px;
+  font-size: 17px; font-family: inherit; background: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s; -webkit-tap-highlight-color: transparent;
+}
+.kana-key:active { background: #f0f0f0; }
+.kana-key.spacer { background: transparent; border-color: transparent; pointer-events: none; }
+.kana-key.modifier { font-size: 15px; background: #f5f5f5; color: #555; }
 
 /* ── スコア品質ラベル ── */
 .match-badge {
@@ -575,15 +598,29 @@ input[type=range]::-webkit-slider-thumb {
         <button class="default-dish-btn" onclick="quickDish('ステーキ')">🥩 ステーキ</button>
         <button class="default-dish-btn" onclick="quickDish('たこ焼き')">🐙 たこ焼き</button>
       </div>
-      <div class="search-row">
-        <div class="dish-input-wrap">
-          <input class="dish-input" id="dishInput" type="text" placeholder="例：牛肉のステーキ、鮭のムニエル、餃子…" />
-          <button class="mic-btn" id="micBtnDish" onclick="startVoiceInput('dishInput', this)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
-            <span class="mic-label">声で検索</span>
-          </button>
-          <div class="dish-dropdown" id="dishDropdown"></div>
+      <input type="hidden" id="dishInput" />
+      <div class="kana-ui">
+        <div class="kana-display-row">
+          <div class="kana-display placeholder" id="kanaDisplay">ひらがなでタッチしてください</div>
+          <button class="kana-bs" onclick="kanaBackspace()">⌫</button>
+          <button class="kana-clear" onclick="kanaClear()">クリア</button>
         </div>
+        <div class="kana-candidates" id="kanaCandidates"></div>
+        <div class="kana-keyboard">
+          <button class="kana-key" onclick="kanaInput('あ')">あ</button><button class="kana-key" onclick="kanaInput('い')">い</button><button class="kana-key" onclick="kanaInput('う')">う</button><button class="kana-key" onclick="kanaInput('え')">え</button><button class="kana-key" onclick="kanaInput('お')">お</button>
+          <button class="kana-key" onclick="kanaInput('か')">か</button><button class="kana-key" onclick="kanaInput('き')">き</button><button class="kana-key" onclick="kanaInput('く')">く</button><button class="kana-key" onclick="kanaInput('け')">け</button><button class="kana-key" onclick="kanaInput('こ')">こ</button>
+          <button class="kana-key" onclick="kanaInput('さ')">さ</button><button class="kana-key" onclick="kanaInput('し')">し</button><button class="kana-key" onclick="kanaInput('す')">す</button><button class="kana-key" onclick="kanaInput('せ')">せ</button><button class="kana-key" onclick="kanaInput('そ')">そ</button>
+          <button class="kana-key" onclick="kanaInput('た')">た</button><button class="kana-key" onclick="kanaInput('ち')">ち</button><button class="kana-key" onclick="kanaInput('つ')">つ</button><button class="kana-key" onclick="kanaInput('て')">て</button><button class="kana-key" onclick="kanaInput('と')">と</button>
+          <button class="kana-key" onclick="kanaInput('な')">な</button><button class="kana-key" onclick="kanaInput('に')">に</button><button class="kana-key" onclick="kanaInput('ぬ')">ぬ</button><button class="kana-key" onclick="kanaInput('ね')">ね</button><button class="kana-key" onclick="kanaInput('の')">の</button>
+          <button class="kana-key" onclick="kanaInput('は')">は</button><button class="kana-key" onclick="kanaInput('ひ')">ひ</button><button class="kana-key" onclick="kanaInput('ふ')">ふ</button><button class="kana-key" onclick="kanaInput('へ')">へ</button><button class="kana-key" onclick="kanaInput('ほ')">ほ</button>
+          <button class="kana-key" onclick="kanaInput('ま')">ま</button><button class="kana-key" onclick="kanaInput('み')">み</button><button class="kana-key" onclick="kanaInput('む')">む</button><button class="kana-key" onclick="kanaInput('め')">め</button><button class="kana-key" onclick="kanaInput('も')">も</button>
+          <button class="kana-key" onclick="kanaInput('や')">や</button><button class="kana-key spacer"></button><button class="kana-key" onclick="kanaInput('ゆ')">ゆ</button><button class="kana-key spacer"></button><button class="kana-key" onclick="kanaInput('よ')">よ</button>
+          <button class="kana-key" onclick="kanaInput('ら')">ら</button><button class="kana-key" onclick="kanaInput('り')">り</button><button class="kana-key" onclick="kanaInput('る')">る</button><button class="kana-key" onclick="kanaInput('れ')">れ</button><button class="kana-key" onclick="kanaInput('ろ')">ろ</button>
+          <button class="kana-key" onclick="kanaInput('わ')">わ</button><button class="kana-key spacer"></button><button class="kana-key" onclick="kanaInput('を')">を</button><button class="kana-key spacer"></button><button class="kana-key" onclick="kanaInput('ん')">ん</button>
+          <button class="kana-key modifier" onclick="kanaInput('ー')">ー</button><button class="kana-key modifier" onclick="addDakuten()">゛</button><button class="kana-key modifier" onclick="addHandakuten()">゜</button><button class="kana-key spacer"></button><button class="kana-key spacer"></button>
+        </div>
+      </div>
+      <div class="search-row">
         <div class="filters">
           <!-- 予算スライダー -->
           <div class="slider-wrap">
@@ -1579,6 +1616,9 @@ function updateSlider(el) {
 
 function quickDish(name) {
   document.getElementById('dishInput').value = name;
+  _dishQuery = '';
+  renderKanaDisplay();
+  renderKanaCandidates();
   suggest();
 }
 
@@ -1641,28 +1681,21 @@ function loadMore() {
   }, 80);
 }
 
-function showInputError(msg, showSuggestions) {
-  var input = document.getElementById('dishInput');
-  input.style.borderColor = '#ef4444';
-  input.style.boxShadow   = '0 0 0 3px rgba(239,68,68,0.18)';
-  setTimeout(function() { input.style.borderColor = ''; input.style.boxShadow = ''; }, 2000);
+function showInputError(msg) {
+  var kanaDisp = document.getElementById('kanaDisplay');
+  kanaDisp.style.borderColor = '#ef4444';
+  setTimeout(function() { kanaDisp.style.borderColor = ''; }, 2000);
 
   var errEl = document.getElementById('inputError');
   if (!errEl) {
     errEl = document.createElement('div');
     errEl.id = 'inputError';
     errEl.style.cssText = 'margin-top:10px;padding:12px 16px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);font-size:13px;line-height:1.8;color:#c0392b';
-    input.parentNode.parentNode.appendChild(errEl);
+    document.getElementById('kanaCandidates').parentNode.appendChild(errEl);
   }
-  var sugg = showSuggestions
-    ? '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">' +
-      ['ステーキ','刺身','パスタ','唐揚げ','天ぷら','餃子','焼き鳥','カレー'].map(function(d) {
-        return '<button onclick="quickDish(\'' + d + '\')" style="height:26px;padding:0 10px;border:1px solid #e8e8e8;background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">' + d + '</button>';
-      }).join('') + '</div>'
-    : '';
-  errEl.innerHTML = '⚠️ ' + msg + sugg;
+  errEl.innerHTML = '⚠️ ' + msg;
   errEl.style.display = 'block';
-  setTimeout(function() { if (errEl) errEl.style.display = 'none'; }, 8000);
+  setTimeout(function() { if (errEl) errEl.style.display = 'none'; }, 6000);
 }
 
 function matchDish(dish) {
@@ -2545,78 +2578,88 @@ function purgeNonCanonicalSearches() {
   } catch(e) {}
 }
 
-// ─── 料理名オートコンプリート ──────────────────────────────────
-var _dishDropdownIndex = -1;
+// ─── 50音キーボード ──────────────────────────────────────────
+var _dishQuery = '';
 
-function searchDishDropdown(val) {
-  var dd = document.getElementById('dishDropdown');
-  var v  = val.replace(/[\s　]/g, '');
-  if (v.length === 0) { dd.classList.remove('open'); dd.innerHTML = ''; return; }
-
-  // DISH_DICTの全キーを検索し、マッチしたエントリの正規名を収集
-  var seen    = {};
-  var results = [];
-  DISH_DICT.forEach(function(entry) {
-    for (var j = 0; j < entry.keys.length; j++) {
-      var k = entry.keys[j];
-      if (k.indexOf(v) !== -1 || v.indexOf(k) !== -1 ||
-          k.replace(/[\s　]/g,'').indexOf(v) !== -1) {
-        var canonical = entry.keys[0];
-        if (!seen[canonical]) {
-          seen[canonical] = true;
-          results.push({ name: canonical, tags: entry.tags, reason: entry.reason });
-        }
-        break;
-      }
-    }
-  });
-
-  if (results.length === 0) { dd.classList.remove('open'); dd.innerHTML = ''; return; }
-
-  dd._results = results;
-  _dishDropdownIndex = -1;
-  dd.innerHTML = results.slice(0, 10).map(function(r, i) {
-    var em = getDishEmoji(r.tags.join(' ') + ' ' + r.name);
-    var tag = r.tags[0] || '';
-    return '<div class="dish-option" onmousedown="selectDishOption(' + i + ')">' +
-      '<span class="dish-option-emoji">' + em + '</span>' +
-      '<span class="dish-option-name">' + r.name + '</span>' +
-      '<span class="dish-option-tags">' + tag + '</span>' +
-    '</div>';
+function hiToKatakana(str) {
+  return str.split('').map(function(c) {
+    var code = c.charCodeAt(0);
+    return (code >= 0x3041 && code <= 0x3096) ? String.fromCharCode(code + 0x60) : c;
   }).join('');
-  dd.classList.add('open');
 }
 
-function selectDishOption(idx) {
-  var dd = document.getElementById('dishDropdown');
-  if (!dd._results || !dd._results[idx]) return;
-  document.getElementById('dishInput').value = dd._results[idx].name;
-  dd.classList.remove('open');
-  dd.innerHTML = '';
-  _dishDropdownIndex = -1;
-  suggest();
+function kanaInput(char) {
+  _dishQuery += char;
+  renderKanaDisplay();
+  renderKanaCandidates();
 }
 
-function closeDishDropdown() {
-  var dd = document.getElementById('dishDropdown');
-  dd.classList.remove('open');
-  _dishDropdownIndex = -1;
+function kanaBackspace() {
+  if (_dishQuery.length > 0) {
+    _dishQuery = _dishQuery.slice(0, -1);
+    renderKanaDisplay();
+    renderKanaCandidates();
+  }
+}
+
+function kanaClear() {
+  _dishQuery = '';
+  renderKanaDisplay();
+  renderKanaCandidates();
+}
+
+function addDakuten() {
+  if (!_dishQuery) return;
+  var last = _dishQuery[_dishQuery.length - 1];
+  var map = {'か':'が','き':'ぎ','く':'ぐ','け':'げ','こ':'ご','さ':'ざ','し':'じ','す':'ず','せ':'ぜ','そ':'ぞ','た':'だ','ち':'ぢ','つ':'づ','て':'で','と':'ど','は':'ば','ひ':'び','ふ':'ぶ','へ':'べ','ほ':'ぼ','う':'ゔ'};
+  if (map[last]) { _dishQuery = _dishQuery.slice(0, -1) + map[last]; renderKanaDisplay(); renderKanaCandidates(); }
+}
+
+function addHandakuten() {
+  if (!_dishQuery) return;
+  var last = _dishQuery[_dishQuery.length - 1];
+  var map = {'は':'ぱ','ひ':'ぴ','ふ':'ぷ','へ':'ぺ','ほ':'ぽ'};
+  if (map[last]) { _dishQuery = _dishQuery.slice(0, -1) + map[last]; renderKanaDisplay(); renderKanaCandidates(); }
+}
+
+function renderKanaDisplay() {
+  var el = document.getElementById('kanaDisplay');
+  if (_dishQuery) {
+    el.textContent = _dishQuery;
+    el.className = 'kana-display has-query';
+  } else {
+    el.textContent = 'ひらがなでタッチしてください';
+    el.className = 'kana-display placeholder';
+  }
+}
+
+function renderKanaCandidates() {
+  var el = document.getElementById('kanaCandidates');
+  if (!_dishQuery) { el.innerHTML = ''; return; }
+  var q = _dishQuery;
+  var qKa = hiToKatakana(q);
+  var seen = [];
+  var matches = [];
+  DISH_DICT.forEach(function(entry) {
+    var canonical = entry.keys[0];
+    if (seen.indexOf(canonical) >= 0) return;
+    var hit = entry.keys.some(function(key) {
+      var keyKa = hiToKatakana(key);
+      return key.indexOf(q) >= 0 || keyKa.indexOf(qKa) >= 0 || key.indexOf(qKa) >= 0;
+    });
+    if (hit) { matches.push(canonical); seen.push(canonical); }
+  });
+  if (matches.length === 0) {
+    el.innerHTML = '<span class="kana-no-match">候補が見つかりません</span>';
+    return;
+  }
+  el.innerHTML = matches.map(function(name) {
+    return '<button class="kana-candidate" onclick="quickDish(\'' + name.replace(/'/g, "\\'") + '\')">' + name + '</button>';
+  }).join('');
 }
 
 // ─── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('dishInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') suggest();
-  });
-
-  // 入力欄をクリアしたら元の画像に戻して読み上げも止める
-  document.getElementById('dishInput').addEventListener('input', function() {
-    if (this.value === '') {
-      setSommelierImg('default');
-      window.speechSynthesis && window.speechSynthesis.cancel();
-    }
-  });
-
   // スライダー初期化
   var slider = document.getElementById('priceSlider');
   if (slider) updateSlider(slider);
@@ -2626,35 +2669,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ランキングパネル初期表示
   renderRankingPanel();
-
-  // 料理入力オートコンプリート
-  var dishInput = document.getElementById('dishInput');
-  dishInput.addEventListener('input', function() {
-    searchDishDropdown(this.value);
-  });
-  dishInput.addEventListener('keydown', function(e) {
-    var dd   = document.getElementById('dishDropdown');
-    var opts = dd.querySelectorAll('.dish-option');
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      _dishDropdownIndex = Math.min(_dishDropdownIndex + 1, opts.length - 1);
-      opts.forEach(function(o, i) { o.classList.toggle('selected', i === _dishDropdownIndex); });
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      _dishDropdownIndex = Math.max(_dishDropdownIndex - 1, -1);
-      opts.forEach(function(o, i) { o.classList.toggle('selected', i === _dishDropdownIndex); });
-    } else if (e.key === 'Enter') {
-      if (_dishDropdownIndex >= 0 && dd._results) {
-        e.preventDefault();
-        selectDishOption(_dishDropdownIndex);
-      }
-    } else if (e.key === 'Escape') {
-      closeDishDropdown();
-    }
-  });
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.dish-input-wrap')) closeDishDropdown();
-  });
 
   // ワイン入力オートコンプリート
   var wineInput = document.getElementById('wineInput');
