@@ -3117,6 +3117,11 @@ function renderKanaDisplay() {
   }
 }
 
+var _COARSE_SUFFIX = /(?:料理|食|菓子|スイーツ|デザート類|料|系|もの)$/;
+function isCoarse(name) {
+  return _COARSE_SUFFIX.test(name) && name.length <= 8;
+}
+
 function renderKanaCandidates() {
   var el = document.getElementById('kanaCandidates');
   if (!_dishQuery) { el.innerHTML = ''; return; }
@@ -3127,9 +3132,10 @@ function renderKanaCandidates() {
   DISH_DICT.forEach(function(entry) {
     var canonical = entry.keys[0];
     if (seen.indexOf(canonical) >= 0) return;
+    if (isCoarse(canonical)) return;
     var hit = entry.keys.some(function(key) {
       var keyKa = hiToKatakana(key);
-      return key.indexOf(q) >= 0 || keyKa.indexOf(qKa) >= 0 || key.indexOf(qKa) >= 0;
+      return key.indexOf(q) === 0 || keyKa.indexOf(qKa) === 0 || key.indexOf(qKa) === 0;
     });
     if (hit) { matches.push(canonical); seen.push(canonical); }
   });
