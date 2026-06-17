@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AIワインナビ</title>
 <script src="wine_data.js"></script>
+<script src="sake_data.js"></script>
+<script src="shochu_data.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
 
@@ -354,7 +356,9 @@ select:focus { border-color: #111; }
 .tag-white { background: #fffbf0; color: #7a6020; border-color: #e8ddb0; }
 .tag-rose  { background: #fff0f5; color: #a0305a; border-color: #f0c8d8; }
 .tag-spark { background: #f0f8ff; color: #2060a0; border-color: #c8dff0; }
-.tag-other { background: #f5f5f5; color: #767676; border-color: #e8e8e8; }
+.tag-other  { background: #f5f5f5; color: #767676; border-color: #e8e8e8; }
+.tag-sake   { background: #f0f5e8; color: #3a6020; border-color: #c8dba8; }
+.tag-shochu { background: #f5f0e8; color: #7a4810; border-color: #ddc8a0; }
 
 .sommelier-comment {
   font-size: 13px; color: #444; line-height: 1.8; font-weight: 300;
@@ -630,8 +634,14 @@ input[type=range]::-webkit-slider-thumb {
             </div>
             <input type="range" id="priceSlider" min="500" max="6000" step="100" value="3000" oninput="updateSlider(this)" />
           </div>
-          <select id="colorFilter">
-            <option value="all">色：すべて</option>
+          <select id="drinkTypeFilter" onchange="updateSubFilter()">
+            <option value="all">種類：全部</option>
+            <option value="wine">🍷 ワイン</option>
+            <option value="sake">🍶 日本酒</option>
+            <option value="shochu">🥃 焼酎</option>
+          </select>
+          <select id="drinkSubFilter">
+            <option value="all">詳細：全部</option>
             <option value="赤">赤ワイン</option>
             <option value="白">白ワイン</option>
             <option value="ロゼ">ロゼ</option>
@@ -1731,53 +1741,89 @@ function matchDish(dish) {
   return null;
 }
 
-function scoreWines(dish, matched) {
-  var priceMax    = parseInt(document.getElementById('priceSlider').value) || 6000;
-  var colorFilter = document.getElementById('colorFilter').value;
+// ─── お酒種類フィルター ───────────────────────────────────────
+function updateSubFilter() {
+  var type = document.getElementById('drinkTypeFilter').value;
+  var sub  = document.getElementById('drinkSubFilter');
+  var opts = {
+    wine:   [['all','詳細：全部'],['赤','赤ワイン'],['白','白ワイン'],['ロゼ','ロゼ'],['スパークリング','スパークリング']],
+    sake:   [['all','詳細：全部'],['純米','純米'],['純米吟醸','純米吟醸'],['純米大吟醸','純米大吟醸'],['吟醸','吟醸'],['大吟醸','大吟醸'],['本醸造','本醸造']],
+    shochu: [['all','詳細：全部'],['芋','芋焼酎'],['麦','麦焼酎'],['米','米焼酎'],['そば','そば焼酎'],['黒糖','黒糖焼酎']],
+    all:    [['all','詳細：全部']]
+  };
+  sub.innerHTML = (opts[type] || opts['all']).map(function(o) {
+    return '<option value="' + o[0] + '">' + o[1] + '</option>';
+  }).join('');
+}
 
-  var scored = WINE_DATA
-    .filter(function(w) {
-      var p   = parseInt(w['参考価格円税込']) || 0;
-      var cat = w['カテゴリ'] || '';
-      var col = w['色'] || '';
-      if (p > priceMax) return false;
-      if (colorFilter !== 'all') {
-        if (colorFilter === 'スパークリング') { if (cat !== 'スパークリング') return false; }
-        else { if (col !== colorFilter || cat === 'スパークリング') return false; }
+function getActiveDrinks() {
+  var typeFilter = document.getElementById('drinkTypeFilter').value;
+  var subFilter  = document.getElementById('drinkSubFilter').value;
+  var all = [];
+
+  if (typeFilter === 'all' || typeFilter === 'wine') {
+    (typeof WINE_DATA !== 'undefined' ? WINE_DATA : []).forEach(function(w) {
+      all.push(Object.assign({}, w, { _type: 'wine' }));
+    });
+  }
+  if (typeFilter === 'all' || typeFilter === 'sake') {
+    (typeof SAKE_DATA !== 'undefined' ? SAKE_DATA : []).forEach(function(s) {
+      all.push(Object.assign({}, s, { _type: 'sake' }));
+    });
+  }
+  if (typeFilter === 'all' || typeFilter === 'shochu') {
+    (typeof SHOCHU_DATA !== 'undefined' ? SHOCHU_DATA : []).forEach(function(s) {
+      all.push(Object.assign({}, s, { _type: 'shochu' }));
+    });
+  }
+
+  if (subFilter !== 'all') {
+    all = all.filter(function(d) {
+      if (d._type === 'wine') {
+        if (subFilter === 'スパークリング') return d['カテゴリ'] === 'スパークリング';
+        return d['色'] === subFilter && d['カテゴリ'] !== 'スパークリング';
       }
-      return true;
-    })
-    .map(function(w) {
-      var score = 0;
-      var kw    = (w['ペアリングキーワード'] || '') + ' ' + (w['料理ペアリング'] || '');
-      var col   = w['色'] || '';
-      var cat   = w['カテゴリ'] || '';
-      var body  = w['ボディ'] || '';
+      return d['種別'] === subFilter;
+    });
+  }
+  return all;
+}
 
-      // 「日常」「カジュアル」キーワードを色ベースのタグとして補完
+function scoreWines(dish, matched) {
+  var priceMax = parseInt(document.getElementById('priceSlider').value) || 6000;
+
+  var scored = getActiveDrinks()
+    .filter(function(d) {
+      return (parseInt(d['参考価格円税込']) || 0) <= priceMax;
+    })
+    .map(function(d) {
+      var score = 0;
+      var kw    = (d['ペアリングキーワード'] || '') + ' ' + (d['料理ペアリング'] || '');
+      var col   = d['色'] || '';
+      var cat   = d['カテゴリ'] || '';
+      var body  = d['ボディ'] || '';
+
+      // ワインのみ：日常・カジュアルキーワード補完
       var kwExpanded = kw;
-      if (kw.indexOf('日常') !== -1 || kw.indexOf('カジュアル') !== -1) {
+      if (d._type === 'wine' && (kw.indexOf('日常') !== -1 || kw.indexOf('カジュアル') !== -1)) {
         if (col === '赤') kwExpanded += ' 肉料理 煮込み 和食';
         if (col === '白') kwExpanded += ' 魚料理 鶏料理 和食';
         if (col === 'ロゼ') kwExpanded += ' 肉料理 魚料理';
         if (cat === 'スパークリング') kwExpanded += ' 前菜 チーズ';
       }
 
-      // キーワード・ボディ・色マッチ
       if (matched) {
         matched.tags.forEach(function(t) { if (kwExpanded.indexOf(t) !== -1) score += 10; });
         if (matched.body  && body === matched.body)  score += 5;
-        if (matched.color && col  === matched.color) score += 8;
+        if (matched.color && d._type === 'wine' && col === matched.color) score += 8;
       }
       if (kwExpanded.indexOf(dish) !== -1) score += 15;
 
-      // 価格帯ボーナス
-      var p = parseInt(w['参考価格円税込']) || 0;
+      var p = parseInt(d['参考価格円税込']) || 0;
       if (p >= 800 && p <= 2000) score += 2;
-      // 750ml以外は軽微なペナルティ（-3→-1に緩和してペットボトルも表示されやすく）
-      if (w['容量ml'] !== '750') score -= 1;
+      if (d._type === 'wine' && d['容量ml'] !== '750') score -= 1;
 
-      return { wine: w, score: score };
+      return { wine: d, score: score };
     })
     .filter(function(x) { return x.score >= 8; })
     .sort(function(a, b) {
@@ -1812,12 +1858,26 @@ function reverseSearchWine(name) {
   suggestByWine();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function getTagClass(cat, color) {
+function getTagClass(cat, color, type) {
+  if (type === 'sake')   return 'tag-sake';
+  if (type === 'shochu') return 'tag-shochu';
   if (cat === 'スパークリング') return 'tag-spark';
   if (color === '赤') return 'tag-red';
   if (color === '白') return 'tag-white';
   if (color === 'ロゼ') return 'tag-rose';
   return 'tag-other';
+}
+
+function drinkIcon(type) {
+  if (type === 'sake')   return '🍶';
+  if (type === 'shochu') return '🥃';
+  return '🍷';
+}
+
+function drinkTypeName(d) {
+  if (d._type === 'sake')   return '日本酒';
+  if (d._type === 'shochu') return '焼酎';
+  return d['カテゴリ'] || 'ワイン';
 }
 
 var RANK_LABELS = ['', 'BEST MATCH', '2ND PICK', '3RD PICK', '4TH', '5TH', '6TH', '7TH', '8TH', '9TH'];
@@ -2066,30 +2126,79 @@ function renderResults(dish, matched, scored, totalCount) {
   // 最初のページ表示時のみ読み上げ（loadMoreでは再度読まない）
   if (scored.length <= 3) speakResultComment(dish, scored);
 
-  var total = (typeof WINE_DATA !== 'undefined') ? WINE_DATA.length : '';
+  var typeFilter = document.getElementById('drinkTypeFilter').value;
+  var drinkLabel = typeFilter === 'sake' ? '日本酒' : typeFilter === 'shochu' ? '焼酎' : typeFilter === 'wine' ? 'ワイン' : 'お酒';
+  var totalWine  = (typeof WINE_DATA !== 'undefined') ? WINE_DATA.length : 0;
+  var totalSake  = (typeof SAKE_DATA !== 'undefined') ? SAKE_DATA.length : 0;
+  var totalShochu= (typeof SHOCHU_DATA !== 'undefined') ? SHOCHU_DATA.length : 0;
+  var totalAll   = (typeFilter === 'all' ? totalWine + totalSake + totalShochu : typeFilter === 'wine' ? totalWine : typeFilter === 'sake' ? totalSake : totalShochu);
+
   headerEl.innerHTML =
     '<div class="result-header">' +
-      '<div class="result-overline">Wine Navigator Recommends</div>' +
-      '<div class="result-dish-title">「<em>' + dish + '</em>」に合うワイン</div>' +
-      '<div class="result-count">' + total + ' 商品から ' + (totalCount || scored.length) + ' 本を厳選 — ' + scored.length + ' 本表示中</div>' +
+      '<div class="result-overline">AI Navigator Recommends</div>' +
+      '<div class="result-dish-title">「<em>' + dish + '</em>」に合う' + drinkLabel + '</div>' +
+      '<div class="result-count">' + totalAll + ' 商品から ' + (totalCount || scored.length) + ' 本を厳選 — ' + scored.length + ' 本表示中</div>' +
     '</div>';
 
   var html = '';
   scored.forEach(function(item, i) {
     var w      = item.wine;
     var pct    = item.pct;
+    var type   = w._type || 'wine';
     var cat    = w['カテゴリ'] || '';
     var color  = w['色'] || '';
-    var tagCls = getTagClass(cat, color);
+    var tagCls = getTagClass(cat, color, type);
     var price  = parseInt(w['参考価格円税込']) || 0;
     var note   = w['備考'] ? '<span class="tag tag-other">' + w['備考'] + '</span>' : '';
-    var c      = buildComment(w, matched);
-    var svg    = bottleSVG(cat, color);
+    var icon   = drinkIcon(type);
+    var typeName = drinkTypeName(w);
+
+    // ボトル表示：ワインはSVG、日本酒・焼酎は絵文字
+    var bottleArea = (type === 'wine')
+      ? bottleSVG(cat, color)
+      : '<div style="font-size:52px;text-align:center;line-height:1;padding:8px 0;">' + icon + '</div>';
+
+    // タグ表示：ワインは色・品種、日本酒・焼酎は種別
+    var tagHtml = '';
+    if (type === 'wine') {
+      tagHtml =
+        '<span class="tag ' + tagCls + '">' + cat + '</span>' +
+        '<span class="tag tag-other">🌍 ' + (w['産地国'] || '') + (w['産地地域'] ? ' · ' + w['産地地域'] : '') + '</span>' +
+        '<span class="tag tag-other">🍇 ' + (w['品種'] || '') + '</span>' +
+        '<span class="tag tag-other">' + (w['辛口甘口'] || '') + ' · ' + bodyLabel(w['ボディ'] || '') + '</span>';
+    } else {
+      tagHtml =
+        '<span class="tag ' + tagCls + '">' + (type === 'sake' ? '日本酒' : '焼酎') + ' · ' + (w['種別'] || '') + '</span>' +
+        '<span class="tag tag-other">🌍 ' + (w['産地国'] || '') + (w['産地地域'] ? ' · ' + w['産地地域'] : '') + '</span>' +
+        '<span class="tag tag-other">' + (w['辛甘'] || '') + ' · ' + bodyLabel(w['ボディ'] || '') + '</span>';
+    }
+    tagHtml += note;
+
+    // コメント（ワインのbuildCommentをそのまま流用、日本酒・焼酎はreason直接表示）
+    var commentHtml = '';
+    if (type === 'wine') {
+      var c = buildComment(w, matched);
+      commentHtml =
+        '<div class="sommelier-comment"><span class="sommelier-icon">' + icon + '</span>' + c.comment +
+          '<div style="margin-top:8px;font-size:11px;color:#7c6fac;font-weight:400;">' + c.info + '</div>' +
+        '</div>' +
+        '<div class="pairing-why">' +
+          '<div class="pairing-why-title">' + c.why.icon + '  なぜこの料理に合うのか</div>' +
+          c.why.why +
+        '</div>';
+    } else {
+      var reason = w['料理ペアリング'] ? '【よく合う料理】' + w['料理ペアリング'].replace(/\s+/g,'、') : '';
+      commentHtml =
+        '<div class="sommelier-comment"><span class="sommelier-icon">' + icon + '</span>' +
+          (w['ペアリングキーワード'] ? '「' + w['ペアリングキーワード'].trim().split(/\s+/).slice(0,3).join('」「') + '」系の料理によく合います。' : '') +
+        '</div>' +
+        (reason ? '<div class="pairing-why"><div class="pairing-why-title">🍽️  おすすめペアリング</div>' + reason + '</div>' : '');
+    }
 
     html +=
       '<div class="wine-card wine-card-' + (i+1) + '">' +
         '<div class="wine-bottle-col">' +
-          svg +
+          bottleArea +
           '<div class="rank-badge rank-' + (i+1) + '">' + RANK_LABELS[i+1] + '</div>' +
         '</div>' +
         '<div class="wine-info">' +
@@ -2099,24 +2208,11 @@ function renderResults(dish, matched, scored, totalCount) {
           '<div class="score-bar-wrap">' +
             '<div class="score-bar-track"><div class="score-bar-fill" style="width:0%" data-pct="' + pct + '%"></div></div>' +
           '</div>' +
-          '<div class="wine-tags">' +
-            '<span class="tag ' + tagCls + '">' + cat + '</span>' +
-            '<span class="tag tag-other">🌍 ' + (w['産地国'] || '') + (w['産地地域'] ? ' · ' + w['産地地域'] : '') + '</span>' +
-            '<span class="tag tag-other">🍇 ' + (w['品種'] || '') + '</span>' +
-            '<span class="tag tag-other">' + (w['辛口甘口'] || '') + ' · ' + bodyLabel(w['ボディ'] || '') + '</span>' +
-            note +
-          '</div>' +
-          '<div class="sommelier-comment">' +
-            '<span class="sommelier-icon">🍷</span>' + c.comment +
-            '<div style="margin-top:8px;font-size:11px;color:#7c6fac;font-weight:400;">' + c.info + '</div>' +
-          '</div>' +
-          '<div class="pairing-why">' +
-            '<div class="pairing-why-title">' + c.why.icon + '  なぜこの料理に合うのか</div>' +
-            c.why.why +
-          '</div>' +
-          '<button class="btn-reverse" onclick="reverseSearchWine(\'' + w['商品名略称'].replace(/'/g,"&#39;") + '\')">' +
-            '🔄 このワインで他の料理も探す' +
-          '</button>' +
+          '<div class="wine-tags">' + tagHtml + '</div>' +
+          commentHtml +
+          (type === 'wine'
+            ? '<button class="btn-reverse" onclick="reverseSearchWine(\'' + w['商品名略称'].replace(/'/g,"&#39;") + '\')">🔄 このワインで他の料理も探す</button>'
+            : '') +
         '</div>' +
         '<div class="wine-price-col">' +
           '<div class="price-label">参考価格</div>' +
