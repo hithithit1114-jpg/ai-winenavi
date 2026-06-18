@@ -2211,6 +2211,24 @@ function scoreWines(dish, matched) {
         if (col === 'ロゼ') kwExpanded += ' 肉料理 魚料理';
         if (cat === 'スパークリング') kwExpanded += ' 前菜 チーズ';
       }
+      // 日本酒：種別ごとのタグ補完（ペアリング適性に応じて対応タグを追加）
+      if (d._type === 'sake') {
+        var stype = d['種別'] || '';
+        if (stype === '純米大吟醸' || stype === '大吟醸') {
+          kwExpanded += ' 魚料理 和食 前菜';
+          // 繊細な料理向けなので洋食は除外して差別化
+        } else if (stype === '純米吟醸' || stype === '吟醸') {
+          kwExpanded += ' 魚料理 和食 鶏料理 前菜 肉料理 エスニック';
+        } else if (stype === '特別純米' || stype === '純米') {
+          kwExpanded += ' 魚料理 和食 鶏料理 肉料理 煮込み 前菜 野菜料理 揚げ物';
+        } else if (stype === '特別本醸造' || stype === '本醸造') {
+          kwExpanded += ' 魚料理 和食 鶏料理 肉料理 揚げ物 前菜 煮込み';
+        } else {
+          kwExpanded += ' 魚料理 和食 鶏料理 肉料理 煮込み 揚げ物 前菜';
+        }
+        // オリジナルキーワード（刺身・天ぷら等の具体的料理名）が dish に含まれればボーナス
+        if (kw.indexOf(dish) !== -1) score += 8;
+      }
 
       if (matched) {
         matched.tags.forEach(function(t) { if (kwExpanded.indexOf(t) !== -1) score += 10; });
