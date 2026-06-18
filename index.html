@@ -2657,15 +2657,15 @@ function speakResultComment(dish, scored) {
 function setSommelierImg(mode) {
   var img = document.getElementById('sommelierImg');
   if (!img) return;
-  var src = mode === 'result'
-    ? 'sommelier-result.png'
-    : 'sommelier-main.png';
+  var isSake = mode === 'sake' || mode === 'sake-result';
+  var src = isSake ? 'hayakawa-sake.png' : 'hayakawa.png';
   img.style.opacity = '0';
   setTimeout(function() { img.src = src; img.style.opacity = '1'; }, 300);
 }
 
 function renderResults(dish, matched, scored, totalCount) {
-  setSommelierImg('result');
+  var _drinkType = document.getElementById('drinkTypeFilter').value;
+  setSommelierImg(_drinkType === 'sake' ? 'sake-result' : 'result');
   var resultsEl = document.getElementById('results');
   var headerEl  = document.getElementById('resultHeader');
   var cardsEl   = document.getElementById('wineCards');
@@ -2838,6 +2838,7 @@ function switchMode(mode) {
     document.getElementById('btnSuggestLabel').textContent = 'ワインを提案';
   }
 
+  setSommelierImg(mode === 'sakeDish' || mode === 'sake' ? 'sake' : 'wine');
   document.getElementById('results').classList.remove('visible');
   document.getElementById('resultHeader').innerHTML = '';
   document.getElementById('wineCards').innerHTML = '';
@@ -3539,7 +3540,7 @@ function matchDishesBySake(sake) {
 }
 
 function renderSakeReverseResults(sake, dishes) {
-  setSommelierImg('result');
+  setSommelierImg('sake-result');
   var resultsEl = document.getElementById('results');
   var headerEl  = document.getElementById('resultHeader');
   var cardsEl   = document.getElementById('wineCards');
