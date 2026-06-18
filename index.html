@@ -3369,6 +3369,10 @@ function renderKanaCandidates() {
 
 // ─── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+  // 初期フィルターをワインに設定
+  var dtf = document.getElementById('drinkTypeFilter');
+  if (dtf) { dtf.value = 'wine'; updateSubFilter(); }
+
   // スライダー初期化
   var slider = document.getElementById('priceSlider');
   if (slider) updateSlider(slider);
