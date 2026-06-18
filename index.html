@@ -578,6 +578,14 @@ input[type=range]::-webkit-slider-thumb {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 22h8M12 11v11M6 3l1.5 8c0 2.5 2 4 4.5 4s4.5-1.5 4.5-4L18 3H6z"/></svg>
         ワイン → 料理を探す
       </button>
+      <button class="mode-tab" id="tabSakeDish" onclick="switchMode('sakeDish')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        料理 → 日本酒を探す
+      </button>
+      <button class="mode-tab" id="tabSake" onclick="switchMode('sake')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
+        日本酒 → 料理を探す
+      </button>
     </div>
 
     <!-- 料理入力パネル -->
@@ -643,9 +651,9 @@ input[type=range]::-webkit-slider-thumb {
             <option value="スパークリング">スパークリング</option>
           </select>
         </div>
-        <button class="btn-suggest" onclick="suggest()">
+        <button class="btn-suggest" id="btnSuggest" onclick="suggest()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          ワインを提案
+          <span id="btnSuggestLabel">ワインを提案</span>
         </button>
       </div>
     </div>
@@ -667,6 +675,26 @@ input[type=range]::-webkit-slider-thumb {
         <div class="quick-label">ワインを選んで試す（247本）</div>
         <div class="kana-row-btns" id="kanaRowBtns"></div>
         <div class="quick-dishes" id="wineQuickList" style="margin-top:10px;max-height:180px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- 日本酒入力パネル -->
+    <div class="wine-search-panel" id="sakeSearchPanel">
+      <div class="search-eyebrow">日本酒名を入力してください</div>
+      <div class="search-row">
+        <div class="wine-input-wrap">
+          <input class="wine-input" id="sakeInput" type="text" placeholder="例：久保田、八海山、純米吟醸…" autocomplete="off" />
+          <div class="wine-dropdown" id="sakeDropdown"></div>
+        </div>
+        <button class="btn-suggest" onclick="suggestBySake()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          料理を提案
+        </button>
+      </div>
+      <div class="quick-wrap">
+        <div class="quick-label">種別から選ぶ</div>
+        <div class="kana-row-btns" id="sakeTypeBtns"></div>
+        <div class="quick-dishes" id="sakeQuickList" style="margin-top:10px;max-height:180px;overflow-y:auto;"></div>
       </div>
     </div>
 
@@ -2626,8 +2654,25 @@ function switchMode(mode) {
   currentMode = mode;
   document.getElementById('tabDish').classList.toggle('active', mode === 'dish');
   document.getElementById('tabWine').classList.toggle('active', mode === 'wine');
-  document.getElementById('dishSearchPanel').classList.toggle('hidden', mode === 'wine');
+  document.getElementById('tabSakeDish').classList.toggle('active', mode === 'sakeDish');
+  document.getElementById('tabSake').classList.toggle('active', mode === 'sake');
+
+  var isDish = mode === 'dish' || mode === 'sakeDish';
+  document.getElementById('dishSearchPanel').classList.toggle('hidden', !isDish);
   document.getElementById('wineSearchPanel').classList.toggle('visible', mode === 'wine');
+  document.getElementById('sakeSearchPanel').classList.toggle('visible', mode === 'sake');
+
+  // 料理→日本酒モードはfilterを日本酒に固定
+  if (mode === 'sakeDish') {
+    document.getElementById('drinkTypeFilter').value = 'sake';
+    updateSubFilter();
+    document.getElementById('btnSuggestLabel').textContent = '日本酒を提案';
+  } else if (mode === 'dish') {
+    document.getElementById('drinkTypeFilter').value = 'all';
+    updateSubFilter();
+    document.getElementById('btnSuggestLabel').textContent = 'ワインを提案';
+  }
+
   document.getElementById('results').classList.remove('visible');
   document.getElementById('resultHeader').innerHTML = '';
   document.getElementById('wineCards').innerHTML = '';
@@ -3190,7 +3235,196 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ワインクイックリスト初期化
   if (typeof WINE_DATA !== 'undefined') initWineQuickList();
+  // 日本酒クイックリスト初期化
+  if (typeof SAKE_DATA !== 'undefined') initSakeQuickList();
+
+  // 日本酒オートコンプリート
+  var sakeInput = document.getElementById('sakeInput');
+  if (sakeInput) {
+    sakeInput.addEventListener('input', function() {
+      var q = this.value.trim();
+      if (!q) { closeSakeDropdown(); return; }
+      var norm = q.replace(/[\s　]/g,'').toLowerCase();
+      var hits = SAKE_DATA.filter(function(s) {
+        var n = (s['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+        return n.indexOf(norm) !== -1;
+      }).slice(0, 8);
+      if (hits.length === 0) { closeSakeDropdown(); return; }
+      var dd = document.getElementById('sakeDropdown');
+      dd.innerHTML = hits.map(function(s, i) {
+        return '<div class="wine-option" onclick="selectSakeOption(' + i + ')" data-idx="' + i + '">' +
+          '<span class="wine-option-name">' + s['商品名略称'] + '</span>' +
+          '<span class="wine-option-meta">' + s['種別'] + ' · ' + s['産地地域'] + ' ' + s['容量ml'] + 'ml</span>' +
+          '</div>';
+      }).join('');
+      dd._hits = hits;
+      dd.classList.add('visible');
+    });
+    sakeInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { suggestBySake(); closeSakeDropdown(); }
+    });
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.wine-input-wrap')) closeSakeDropdown();
+  });
 });
+
+function closeSakeDropdown() {
+  var dd = document.getElementById('sakeDropdown');
+  if (dd) dd.classList.remove('visible');
+}
+
+function selectSakeOption(i) {
+  var dd = document.getElementById('sakeDropdown');
+  var s = dd._hits[i];
+  document.getElementById('sakeInput').value = s['商品名略称'];
+  selectedSake = s;
+  closeSakeDropdown();
+  suggestBySake();
+}
+
+var selectedSake = null;
+
+function initSakeQuickList() {
+  var SAKE_TYPES = ['純米大吟醸','大吟醸','純米吟醸','吟醸','特別純米','純米','特別本醸造','本醸造','にごり酒','普通酒'];
+  var btnHtml = '';
+  SAKE_TYPES.forEach(function(type) {
+    var exists = SAKE_DATA.some(function(s) { return s['種別'] === type; });
+    if (exists) {
+      btnHtml += '<button class="kana-row-btn" onclick="filterSakesByType(\'' + type + '\')" id="sakeBtn_' + type + '">' + type + '</button>';
+    }
+  });
+  document.getElementById('sakeTypeBtns').innerHTML = btnHtml;
+  document.getElementById('sakeQuickList').innerHTML = '<span style="font-size:12px;color:#bbb;">種別を選ぶと一覧が表示されます</span>';
+}
+
+function filterSakesByType(type) {
+  document.querySelectorAll('.kana-row-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.getElementById('sakeBtn_' + type);
+  if (btn) btn.classList.add('active');
+
+  var matched = SAKE_DATA.filter(function(s) { return s['種別'] === type; });
+  matched.sort(function(a, b) { return a['商品名略称'].localeCompare(b['商品名略称'], 'ja'); });
+
+  if (matched.length === 0) {
+    document.getElementById('sakeQuickList').innerHTML = '<span style="font-size:12px;color:#bbb;">該当する日本酒がありません</span>';
+    return;
+  }
+  var html = matched.map(function(s) {
+    return '<span class="quick-dish" onclick="quickSake(\'' + s['商品名略称'].replace(/'/g,"&#39;") + '\')">' +
+      '🍶 ' + s['商品名略称'] + ' <small style="opacity:.6;">' + s['容量ml'] + 'ml</small></span>';
+  }).join('');
+  document.getElementById('sakeQuickList').innerHTML = html;
+}
+
+function quickSake(name) {
+  document.getElementById('sakeInput').value = name;
+  selectedSake = findSakeByName(name);
+  closeSakeDropdown();
+  suggestBySake();
+}
+
+function findSakeByName(q) {
+  if (!q) return null;
+  var norm = q.replace(/[\s　]/g,'').toLowerCase();
+  for (var i = 0; i < SAKE_DATA.length; i++) {
+    var s = SAKE_DATA[i];
+    var n1 = (s['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+    var n2 = (s['正式商品名'] || '').replace(/[\s　]/g,'').toLowerCase();
+    if (n1 === norm || n2 === norm) return s;
+  }
+  for (var i = 0; i < SAKE_DATA.length; i++) {
+    var s = SAKE_DATA[i];
+    var n1 = (s['商品名略称'] || '').replace(/[\s　]/g,'').toLowerCase();
+    if (n1.indexOf(norm) !== -1) return s;
+  }
+  return null;
+}
+
+function suggestBySake() {
+  var input = document.getElementById('sakeInput').value.trim();
+  if (!input) return;
+  var sake = selectedSake || findSakeByName(input);
+  if (!sake) {
+    var el = document.getElementById('sakeInput');
+    el.style.borderColor = '#ef4444';
+    setTimeout(function() { el.style.borderColor = ''; }, 2000);
+    return;
+  }
+  selectedSake = sake;
+
+  var dishes = matchDishesBySake(sake);
+  renderSakeReverseResults(sake, dishes);
+}
+
+function matchDishesBySake(sake) {
+  var kw = (sake['ペアリングキーワード'] || '') + ' ' + (sake['料理ペアリング'] || '');
+  var body = sake['ボディ'] || '';
+  var scored = [];
+  DISH_DICT.forEach(function(entry) {
+    if (isCoarse(entry.keys[0])) return;
+    var score = 0;
+    entry.tags.forEach(function(t) { if (kw.indexOf(t) !== -1) score += 8; });
+    if (entry.body && body && entry.body === body) score += 3;
+    entry.keys.forEach(function(k) { if (kw.indexOf(k) !== -1) score += 5; });
+    if (score > 0) scored.push({ dish: entry, score: score });
+  });
+  scored.sort(function(a, b) { return b.score - a.score; });
+  return scored.slice(0, 12).map(function(x) { return x.dish; });
+}
+
+function renderSakeReverseResults(sake, dishes) {
+  setSommelierImg('result');
+  var resultsEl = document.getElementById('results');
+  var headerEl  = document.getElementById('resultHeader');
+  var cardsEl   = document.getElementById('wineCards');
+  var recipeEl  = document.getElementById('recipeSection');
+  resultsEl.classList.remove('visible');
+
+  headerEl.innerHTML =
+    '<div class="result-header">' +
+      '<div class="result-overline">Pairing Navi</div>' +
+      '<div class="result-dish-title">「<em>' + sake['商品名略称'] + '</em>」に合うお料理</div>' +
+      '<div class="result-count">このお酒の特徴から ' + dishes.length + ' 品のお料理を提案します</div>' +
+    '</div>' +
+    '<div class="selected-wine-banner">' +
+      '<div class="selected-wine-banner-bottle"><span style="font-size:48px">🍶</span></div>' +
+      '<div class="selected-wine-banner-info">' +
+        '<div class="selected-wine-banner-label">Selected Sake</div>' +
+        '<div class="selected-wine-banner-name">' + sake['商品名略称'] + '</div>' +
+        '<div class="selected-wine-banner-meta">' +
+          (sake['産地地域'] || '') +
+          ' ／ ' + (sake['種別'] || '') +
+          ' ／ ' + (sake['辛甘'] || '') + ' · ' + (sake['ボディ'] || '') + 'ボディ' +
+          (sake['容量ml'] ? ' ／ ' + sake['容量ml'] + 'ml' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  if (dishes.length === 0) {
+    cardsEl.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:24px 0;">この日本酒に合う料理の組み合わせが見つかりませんでした。</div>';
+    recipeEl.innerHTML = '';
+    resultsEl.classList.add('visible');
+    return;
+  }
+
+  var rankLabels = ['BEST MATCH','2ND PICK','3RD PICK'];
+  var html = dishes.map(function(dish, i) {
+    var emoji = getDishEmoji(dish.tags);
+    var label = rankLabels[i] || '';
+    return '<div class="wine-card' + (i < 3 ? ' top-pick' : '') + '">' +
+      (label ? '<div class="rank-badge">' + label + '</div>' : '') +
+      '<div class="wine-name">' + (i < 3 ? (i===0?'🥇':i===1?'🥈':'🥉') : '') + ' ' + emoji + ' ' + dish.keys[0] + '</div>' +
+      '<div class="wine-meta">' + dish.reason + '</div>' +
+      '</div>';
+  }).join('');
+  cardsEl.innerHTML = html;
+  recipeEl.innerHTML = '';
+
+  void resultsEl.offsetWidth;
+  resultsEl.classList.add('visible');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 </script>
 </body>
 </html>
