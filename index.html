@@ -2529,11 +2529,13 @@ function renderResults(dish, matched, scored, totalCount) {
   resultsEl.classList.remove('visible');
 
   if (scored.length === 0) {
+    var _tf = document.getElementById('drinkTypeFilter').value;
+    var _noResultLabel = _tf === 'sake' ? '日本酒' : _tf === 'shochu' ? '焼酎' : _tf === 'wine' ? 'ワイン' : 'お酒';
     headerEl.innerHTML =
       '<div class="result-header">' +
         '<div class="result-overline">結果</div>' +
         '<div class="result-dish-title">「<em>' + dish + '</em>」</div>' +
-        '<div class="result-count">条件に合うワインが見つかりませんでした。予算や色のフィルターを変えてみてください。</div>' +
+        '<div class="result-count">条件に合う' + _noResultLabel + 'が見つかりませんでした。予算や種別のフィルターを変えてみてください。</div>' +
       '</div>';
     cardsEl.innerHTML = '';
     recipeEl.innerHTML = '';
