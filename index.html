@@ -3480,15 +3480,25 @@ function renderSakeReverseResults(sake, dishes) {
   }
 
   var rankLabels = ['BEST MATCH','2ND PICK','3RD PICK'];
-  var html = dishes.map(function(dish, i) {
+  var html = '<div class="dish-cards">';
+  dishes.forEach(function(dish, i) {
     var emoji = getDishEmoji(dish.tags);
-    var label = rankLabels[i] || '';
-    return '<div class="wine-card' + (i < 3 ? ' top-pick' : '') + '">' +
-      (label ? '<div class="rank-badge">' + label + '</div>' : '') +
-      '<div class="wine-name">' + (i < 3 ? (i===0?'🥇':i===1?'🥈':'🥉') : '') + ' ' + emoji + ' ' + dish.keys[0] + '</div>' +
-      '<div class="wine-meta">' + dish.reason + '</div>' +
+    var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+    html +=
+      '<div class="dish-card dish-card-' + (i+1) + '">' +
+        '<div class="dish-emoji">' + emoji +
+          (rankLabels[i] ? '<div style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--gold);margin-top:6px;text-align:center;">' + rankLabels[i] + '</div>' : '') +
+        '</div>' +
+        '<div class="dish-card-body">' +
+          '<div class="dish-card-name">' + medal + ' ' + dish.keys[0] + '</div>' +
+          '<div class="dish-card-reason">🍶 ' + dish.reason + '</div>' +
+          '<div class="wine-tags">' +
+            dish.tags.map(function(t) { return '<span class="tag tag-other">' + t + '</span>'; }).join('') +
+          '</div>' +
+        '</div>' +
       '</div>';
-  }).join('');
+  });
+  html += '</div>';
   cardsEl.innerHTML = html;
   recipeEl.innerHTML = '';
 
