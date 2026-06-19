@@ -3490,18 +3490,25 @@ function renderKanaCandidates() {
   var qKa = hiToKatakana(q);
   var seen = [];
   var matches = [];
+  function startsWithQuery(k) {
+    var kKa = hiToKatakana(k);
+    return k.indexOf(q) === 0 || kKa.indexOf(qKa) === 0 || k.indexOf(qKa) === 0;
+  }
   DISH_DICT.forEach(function(entry) {
     var canonical = entry.keys[0];
-    if (seen.indexOf(canonical) >= 0) return;
-    if (isCoarse(canonical)) return;
-    // 全キー（漢字・ひらがな読みなど）で前方一致を判定
-    var hit = false;
-    for (var ki = 0; ki < entry.keys.length; ki++) {
-      var k = entry.keys[ki];
-      var kKa = hiToKatakana(k);
-      if (k.indexOf(q) === 0 || kKa.indexOf(qKa) === 0 || k.indexOf(qKa) === 0) { hit = true; break; }
+    // 表示ラベルを決める：先頭キーが入力始まりならそれ、なければ入力始まりの読みキー
+    var label = null;
+    if (startsWithQuery(canonical)) {
+      label = canonical;
+    } else {
+      for (var ki = 1; ki < entry.keys.length; ki++) {
+        if (startsWithQuery(entry.keys[ki])) { label = entry.keys[ki]; break; }
+      }
     }
-    if (hit) { matches.push(canonical); seen.push(canonical); }
+    if (!label) return;
+    if (isCoarse(label)) return;
+    if (seen.indexOf(label) >= 0) return;
+    matches.push(label); seen.push(label);
   });
   if (matches.length === 0) {
     el.innerHTML = '<span class="kana-no-match">候補が見つかりません</span>';
