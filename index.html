@@ -2624,7 +2624,7 @@ function toggleVoice() {
     _voiceMuted = !_voiceMuted;
     var btn = document.getElementById('voiceToggleBtn');
     if (btn) btn.textContent = _voiceMuted ? '🔇 音声OFF' : '🔊 音声ON';
-    if (_voiceMuted && _ttsAudio) { _ttsAudio.pause(); }
+    if (_voiceMuted && window.speechSynthesis) window.speechSynthesis.cancel();
   } catch(e) {}
 }
 
@@ -2698,15 +2698,34 @@ function applyReadingFix(text) {
   return out;
 }
 
+// 端末内蔵の音声から、一番なめらかな日本語音声を選ぶ
+function pickBestJaVoice() {
+  if (!window.speechSynthesis) return null;
+  var voices = window.speechSynthesis.getVoices();
+  var ja = voices.filter(function(v) { return v.lang === 'ja-JP' || v.lang.indexOf('ja') === 0; });
+  if (ja.length === 0) return null;
+  // 優先順位：Natural(高品質) > Online > 有名な自然音声名 > その他
+  var prefer = ['natural', 'online', 'nanami', 'ayumi', 'keita', 'haruka', 'sayaka', 'ichiro', 'kyoko'];
+  for (var p = 0; p < prefer.length; p++) {
+    for (var i = 0; i < ja.length; i++) {
+      if (ja[i].name.toLowerCase().indexOf(prefer[p]) !== -1) return ja[i];
+    }
+  }
+  return ja[0];
+}
+
 function speakText(text) {
   try {
-    if (_voiceMuted) return;
-    if (!_ttsAudio) _ttsAudio = new Audio();
-    // GET方式：Audioタグに直接URLを指定（スマホのタップ操作内で確実に再生）
+    if (_voiceMuted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
     var fixed = applyReadingFix(text);
-    var url = _EL_WORKER + '/?text=' + encodeURIComponent(fixed) + '&voice_id=' + encodeURIComponent(_EL_VOICE);
-    _ttsAudio.src = url;
-    _ttsAudio.play().catch(function(e) { console.warn('play error:', e); });
+    var utter = new SpeechSynthesisUtterance(fixed);
+    utter.lang = 'ja-JP';
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    var v = pickBestJaVoice();
+    if (v) utter.voice = v;
+    window.speechSynthesis.speak(utter);
   } catch(e) {}
 }
 
