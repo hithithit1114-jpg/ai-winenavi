@@ -2627,19 +2627,10 @@ function speakText(text) {
   try {
     if (_voiceMuted) return;
     if (!_ttsAudio) _ttsAudio = new Audio();
-    _ttsAudio.pause();
-    fetch(_EL_WORKER, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text, voice_id: _EL_VOICE })
-    })
-    .then(function(res) { return res.blob(); })
-    .then(function(blob) {
-      var url = URL.createObjectURL(blob);
-      _ttsAudio.src = url;
-      _ttsAudio.play().catch(function(e) { console.warn('play error:', e); });
-    })
-    .catch(function(e) { console.warn('TTS error:', e); });
+    // GET方式：Audioタグに直接URLを指定（スマホのタップ操作内で確実に再生）
+    var url = _EL_WORKER + '/?text=' + encodeURIComponent(text) + '&voice_id=' + encodeURIComponent(_EL_VOICE);
+    _ttsAudio.src = url;
+    _ttsAudio.play().catch(function(e) { console.warn('play error:', e); });
   } catch(e) {}
 }
 
