@@ -2711,6 +2711,7 @@ function applyReadingFix(text) {
 }
 
 // 端末内蔵の音声から、一番なめらかな日本語音声を選ぶ
+var _bestVoice = null;
 function pickBestJaVoice() {
   if (!window.speechSynthesis) return null;
   var voices = window.speechSynthesis.getVoices();
@@ -2726,18 +2727,44 @@ function pickBestJaVoice() {
   return ja[0];
 }
 
+// ページ読み込み時に音声リストを事前ロードして最良の声をキャッシュ
+function preloadVoices() {
+  var v = pickBestJaVoice();
+  if (v) _bestVoice = v;
+}
+if (window.speechSynthesis) {
+  preloadVoices();
+  window.speechSynthesis.onvoiceschanged = preloadVoices;
+}
+
+function doSpeak(text) {
+  var fixed = applyReadingFix(text);
+  var utter = new SpeechSynthesisUtterance(fixed);
+  utter.lang = 'ja-JP';
+  utter.rate = 0.95;
+  utter.pitch = 1.0;
+  var v = _bestVoice || pickBestJaVoice();
+  if (v) utter.voice = v;
+  window.speechSynthesis.speak(utter);
+}
+
 function speakText(text) {
   try {
     if (_voiceMuted || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    var fixed = applyReadingFix(text);
-    var utter = new SpeechSynthesisUtterance(fixed);
-    utter.lang = 'ja-JP';
-    utter.rate = 0.95;
-    utter.pitch = 1.0;
-    var v = pickBestJaVoice();
-    if (v) utter.voice = v;
-    window.speechSynthesis.speak(utter);
+    // 良い音声がまだロードされていなければ、ロード完了を待ってから話す
+    if (!_bestVoice && window.speechSynthesis.getVoices().length === 0) {
+      var spoke = false;
+      var fire = function() {
+        if (spoke) return; spoke = true;
+        preloadVoices();
+        doSpeak(text);
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', fire, { once: true });
+      setTimeout(fire, 250);  // 念のためのフォールバック
+      return;
+    }
+    doSpeak(text);
   } catch(e) {}
 }
 
