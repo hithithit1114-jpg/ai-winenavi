@@ -2070,6 +2070,7 @@ function getCanonicalName(dish, matched) {
 }
 
 function suggest() {
+  unlockAudio();
   var dish = document.getElementById('dishInput').value.trim();
   if (!dish) { showInputError('料理名を入力してください'); return; }
 
@@ -2599,21 +2600,34 @@ function startVoiceInput(targetId, btn) {
 var _voiceMuted = false;
 var _EL_WORKER  = 'https://super-river-d169.hithithit1114.workers.dev';
 var _EL_VOICE   = 'lfS4FNq2QJ0xr8H1zM7s';
-var _currentAudio = null;
+var _ttsAudio   = null;
+var _audioUnlocked = false;
+
+// スマホ対応：ユーザーのタップ操作中にオーディオをアンロックしておく
+function unlockAudio() {
+  try {
+    if (!_ttsAudio) _ttsAudio = new Audio();
+    if (_audioUnlocked) return;
+    _ttsAudio.src = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQxAADwAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+    var p = _ttsAudio.play();
+    if (p) p.then(function() { _ttsAudio.pause(); _ttsAudio.currentTime = 0; _audioUnlocked = true; }).catch(function(){});
+  } catch(e) {}
+}
 
 function toggleVoice() {
   try {
     _voiceMuted = !_voiceMuted;
     var btn = document.getElementById('voiceToggleBtn');
     if (btn) btn.textContent = _voiceMuted ? '🔇 音声OFF' : '🔊 音声ON';
-    if (_voiceMuted && _currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+    if (_voiceMuted && _ttsAudio) { _ttsAudio.pause(); }
   } catch(e) {}
 }
 
 function speakText(text) {
   try {
     if (_voiceMuted) return;
-    if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+    if (!_ttsAudio) _ttsAudio = new Audio();
+    _ttsAudio.pause();
     fetch(_EL_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2622,8 +2636,8 @@ function speakText(text) {
     .then(function(res) { return res.blob(); })
     .then(function(blob) {
       var url = URL.createObjectURL(blob);
-      _currentAudio = new Audio(url);
-      _currentAudio.play();
+      _ttsAudio.src = url;
+      _ttsAudio.play().catch(function(e) { console.warn('play error:', e); });
     })
     .catch(function(e) { console.warn('TTS error:', e); });
   } catch(e) {}
@@ -3084,6 +3098,7 @@ function getDishEmoji(tags) {
 }
 
 function suggestByWine() {
+  unlockAudio();
   var input = document.getElementById('wineInput').value.trim();
   if (!input) { showWineInputError('ワイン名を入力してください'); return; }
 
@@ -3523,6 +3538,7 @@ function findSakeByName(q) {
 }
 
 function suggestBySake() {
+  unlockAudio();
   var input = document.getElementById('sakeInput').value.trim();
   if (!input) return;
   var sake = selectedSake || findSakeByName(input);
