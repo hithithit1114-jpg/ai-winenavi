@@ -2717,8 +2717,8 @@ function pickBestJaVoice() {
   var voices = window.speechSynthesis.getVoices();
   var ja = voices.filter(function(v) { return v.lang === 'ja-JP' || v.lang.indexOf('ja') === 0; });
   if (ja.length === 0) return null;
-  // 優先順位：Natural(高品質) > Online > 有名な自然音声名 > その他
-  var prefer = ['natural', 'online', 'nanami', 'ayumi', 'keita', 'haruka', 'sayaka', 'ichiro', 'kyoko'];
+  // 優先順位：クリアな女性音声を優先（Nanami/Ayumi/Haruka/Sayaka/Kyoko）→ Natural/Online → その他
+  var prefer = ['nanami', 'ayumi', 'haruka', 'sayaka', 'kyoko', 'natural', 'online'];
   for (var p = 0; p < prefer.length; p++) {
     for (var i = 0; i < ja.length; i++) {
       if (ja[i].name.toLowerCase().indexOf(prefer[p]) !== -1) return ja[i];
@@ -2750,13 +2750,20 @@ function doSpeak(text) {
 
 function speakText(text) {
   try {
-    if (_voiceMuted) return;
-    if (!_ttsAudio) _ttsAudio = new Audio();
-    // GET方式：ElevenLabsの声（_EL_VOICE）をAudioタグに直接指定
-    var fixed = applyReadingFix(text);
-    var url = _EL_WORKER + '/?text=' + encodeURIComponent(fixed) + '&voice_id=' + encodeURIComponent(_EL_VOICE);
-    _ttsAudio.src = url;
-    _ttsAudio.play().catch(function(e) { console.warn('play error:', e); });
+    if (_voiceMuted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (!_bestVoice && window.speechSynthesis.getVoices().length === 0) {
+      var spoke = false;
+      var fire = function() {
+        if (spoke) return; spoke = true;
+        preloadVoices();
+        doSpeak(text);
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', fire, { once: true });
+      setTimeout(fire, 250);
+      return;
+    }
+    doSpeak(text);
   } catch(e) {}
 }
 
