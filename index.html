@@ -3452,15 +3452,25 @@ function renderKanaCandidates() {
     var kKa = hiToKatakana(k);
     return k.indexOf(q) === 0 || kKa.indexOf(qKa) === 0 || k.indexOf(qKa) === 0;
   }
+  // 総称エントリ（具体名キーで一致したら、その具体名を表示したいもの）
+  var _GENERIC_CANON = { '貝':1, '刺身':1, 'シーフード':1, '寿司':1, 'チーズ':1 };
+  function isAllKatakana(str) {
+    return /^[ァ-ヶー]+$/.test(str);
+  }
   DISH_DICT.forEach(function(entry) {
     var canonical = entry.keys[0];
-    // 表示ラベルを決める：先頭キーが入力始まりならそれ、なければ入力始まりの読みキー
     var label = null;
     if (startsWithQuery(canonical)) {
+      // 先頭キー（正式表記）が入力で始まる → 正式表記を表示
       label = canonical;
     } else {
+      // 読みキー等で一致 → 原則は正式表記（漢字）を表示
+      // 総称エントリで「カタカナの具体名（アサリ等）」が一致した場合のみ具体名を表示
       for (var ki = 1; ki < entry.keys.length; ki++) {
-        if (startsWithQuery(entry.keys[ki])) { label = entry.keys[ki]; break; }
+        if (startsWithQuery(entry.keys[ki])) {
+          label = (_GENERIC_CANON[canonical] && isAllKatakana(entry.keys[ki])) ? entry.keys[ki] : canonical;
+          break;
+        }
       }
     }
     if (!label) return;
